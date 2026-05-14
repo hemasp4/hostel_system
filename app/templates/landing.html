@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}HostelHub — Hostel Management System{% endblock %}
+
+{% block main_wrapper %}
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <h1>Welcome to HostelHub</h1>
+    <p>Streamline hostel operations with leave management, QR gate passes, and real-time attendance tracking.</p>
+    <div class="hero-btns">
+      {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-white btn-lg">Get Started</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-lg">Login</a>
+      {% else %}
+        {% if current_user.role == 'student' %}
+          <a href="{{ url_for('student.dashboard') }}" class="btn btn-white btn-lg">Go to Dashboard</a>
+        {% elif current_user.role == 'warden' %}
+          <a href="{{ url_for('warden.dashboard') }}" class="btn btn-white btn-lg">Go to Dashboard</a>
+        {% elif current_user.role == 'admin' %}
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-white btn-lg">Go to Dashboard</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="container">
+    <h2 class="text-center mb-3" style="font-size:1.5rem;font-weight:700;">Everything you need</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon blue"><i class="hgi hgi-calendar-check-in"></i></div>
+        <h4>Leave Management</h4>
+        <p>Easy leave request submission and approval workflow for students and wardens.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon green"><i class="hgi hgi-qr-code"></i></div>
+        <h4>QR Gate Pass</h4>
+        <p>Secure QR codes auto-generated for approved leaves — scan at gate entry/exit.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon yellow"><i class="hgi hgi-notification-01"></i></div>
+        <h4>Instant Alerts</h4>
+        <p>Email and SMS notifications keep wardens and students informed at all times.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div><div class="stat-num">500+</div><div class="stat-text">Students</div></div>
+    <div><div class="stat-num">50+</div><div class="stat-text">Staff Members</div></div>
+    <div><div class="stat-num">1000+</div><div class="stat-text">Leave Requests</div></div>
+    <div><div class="stat-num">24/7</div><div class="stat-text">Support</div></div>
+  </div>
+</div>
+{% endblock %}

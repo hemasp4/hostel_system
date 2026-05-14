@@ -1,0 +1,75 @@
+<!-- Leave Details Modal -->
+<div class="modal fade" id="leaveDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Leave Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Student Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td id="modal-student-name"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td id="modal-student-email"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Phone:</strong></td>
+                                <td id="modal-student-phone"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Room No:</strong></td>
+                                <td id="modal-student-room"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Leave Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Leave ID:</strong></td>
+                                <td id="modal-leave-id"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Duration:</strong></td>
+                                <td id="modal-leave-duration"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Days:</strong></td>
+                                <td id="modal-leave-days"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td id="modal-leave-status"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Reason for Leave</h6>
+                        <p id="modal-leave-reason" class="border p-2 bg-light"></p>
+                    </div>
+                </div>
+                <div class="row mt-3" id="modal-remarks-section" style="display:none;">
+                    <div class="col-12">
+                        <h6>Warden/Admin Remarks</h6>
+                        <p id="modal-leave-remarks" class="border p-2 bg-light"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="modal-print-btn" onclick="printLeaveDetails()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

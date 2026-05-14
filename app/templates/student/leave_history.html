@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Leave History — HostelHub{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Leave History</h1>
+
+<!-- Filters -->
+<div class="card">
+  <div class="card-body">
+    <form method="GET" class="form-row" style="flex-wrap:wrap;gap:0.75rem;align-items:flex-end;">
+      <div class="form-group" style="margin:0;min-width:140px;">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option value="">All</option>
+          <option value="pending"   {{ 'selected' if request.args.get('status')=='pending' }}>Pending</option>
+          <option value="approved"  {{ 'selected' if request.args.get('status')=='approved' }}>Approved</option>
+          <option value="rejected"  {{ 'selected' if request.args.get('status')=='rejected' }}>Rejected</option>
+          <option value="cancelled" {{ 'selected' if request.args.get('status')=='cancelled' }}>Cancelled</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;min-width:140px;">
+        <label class="form-label">From Date</label>
+        <input type="date" name="from_date" class="form-control" value="{{ request.args.get('from_date','') }}">
+      </div>
+      <div class="form-group" style="margin:0;min-width:140px;">
+        <label class="form-label">To Date</label>
+        <input type="date" name="to_date" class="form-control" value="{{ request.args.get('to_date','') }}">
+      </div>
+      <div class="flex gap-1">
+        <button type="submit" class="btn btn-primary"><i class="hgi hgi-filter"></i> Filter</button>
+        <a href="{{ url_for('leave.history') }}" class="btn btn-secondary">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header"><span class="card-title">Your Leave Requests</span></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>#</th><th>Requested</th><th>Leave Period</th><th>Days</th><th>Reason</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% if leaves %}
+          {% for leave in leaves %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ leave.requested_at.strftime('%d %b %Y') }}</td>
+            <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
+            <td>{{ (leave.end_date - leave.start_date).days + 1 }}</td>
+            <td>{{ leave.reason[:50] }}{% if leave.reason|length > 50 %}…{% endif %}</td>
+            <td>
+              {% if leave.status == 'pending' %}<span class="badge badge-warning">Pending</span>
+              {% elif leave.status == 'approved' %}<span class="badge badge-success">Approved</span>
+              {% elif leave.status == 'cancelled' %}<span class="badge badge-secondary">Cancelled</span>
+              {% else %}<span class="badge badge-danger">Rejected</span>{% endif %}
+            </td>
+            <td class="flex gap-1">
+              <button class="btn btn-sm btn-outline" onclick="viewDetails('{{ leave.id }}')">
+                <i class="hgi hgi-eye"></i>
+              </button>
+              {% if leave.status == 'approved' and leave.qr_code %}
+                <button class="btn btn-sm btn-primary" onclick="showQR('{{ leave.qr_code }}')">
+                  <i class="hgi hgi-qr-code"></i>
+                </button>
+              {% endif %}
+              {% if leave.status == 'pending' %}
+                <form method="POST" action="{{ url_for('leave.cancel_leave', leave_id=leave.id) }}" style="display:inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this leave request?')">
+                    <i class="hgi hgi-cancel-01"></i>
+                  </button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7"><div class="empty-state"><i class="hgi hgi-clock-01"></i>No leave requests found.</div></td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Leave Request Details</span>
+      <button class="modal-close" onclick="closeModal('detailsModal')">×</button>
+    </div>
+    <div class="modal-body" id="detailsContent"></div>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-box" style="max-width:340px;">
+    <div class="modal-header">
+      <span class="modal-title">Leave QR Code</span>
+      <button class="modal-close" onclick="closeModal('qrModal')">×</button>
+    </div>
+    <div class="modal-body text-center">
+      <img id="qrImage" src="" alt="QR Code" style="max-width:260px;border-radius:8px;">
+      <p class="mt-1 text-muted text-sm">Show this QR code at the gate</p>
+      <button class="btn btn-primary mt-1" onclick="printQR()"><i class="hgi hgi-printer"></i> Print</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function viewDetails(leaveId) {
+  fetch(`/leave/details/${leaveId}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('detailsContent').innerHTML = `
+        <table class="table">
+          <tr><td><strong>Reason</strong></td><td>${data.reason}</td></tr>
+          <tr><td><strong>Period</strong></td><td>${data.start_date} → ${data.end_date} (${data.duration} days)</td></tr>
+          <tr><td><strong>Status</strong></td><td>${data.status}</td></tr>
+          <tr><td><strong>Requested</strong></td><td>${data.requested_at}</td></tr>
+          ${data.approved_by ? `<tr><td><strong>Approved By</strong></td><td>${data.approved_by}</td></tr>` : ''}
+          ${data.remarks ? `<tr><td><strong>Remarks</strong></td><td>${data.remarks}</td></tr>` : ''}
+        </table>`;
+      openModal('detailsModal');
+    });
+}
+function showQR(qrCode) {
+  document.getElementById('qrImage').src = qrCode;
+  openModal('qrModal');
+}
+function printQR() {
+  const w = window.open('','','height=400,width=400');
+  w.document.write(`<html><body style="text-align:center;font-family:Inter,sans-serif;padding:2rem">
+    <h3>Hostel Leave Pass</h3>
+    <img src="${document.getElementById('qrImage').src}" style="max-width:280px">
+    <p>Show this QR code at the gate</p>
+  </body></html>`);
+  w.document.close(); w.print();
+}
+</script>
+{% endblock %}

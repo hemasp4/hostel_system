@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — HostelHub{% endblock %}
+
+{% block extra_css %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Admin Dashboard</h1>
+
+<div class="row mb-2">
+  <div class="col-4">
+    <div class="stat-card stat-card-blue">
+      <div class="stat-label">Total Students</div>
+      <div class="stat-value blue">{{ total_students }}</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat-card stat-card-green">
+      <div class="stat-label">Total Wardens</div>
+      <div class="stat-value green">{{ total_wardens }}</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat-card stat-card-yellow">
+      <div class="stat-label">Pending Leaves</div>
+      <div class="stat-value yellow">{{ pending_leaves }}</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat-card stat-card-red">
+      <div class="stat-label">Total Leaves</div>
+      <div class="stat-value red">{{ total_leaves }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-2">
+  <div class="col-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Leave Requests Trend</span></div>
+      <div class="card-body" style="height: 320px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="leaveChart" 
+                data-labels='{{ chart_data|map(attribute="date")|list|tojson|safe }}'
+                data-values='{{ chart_data|map(attribute="count")|list|tojson|safe }}'></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Leave Status Distribution</span></div>
+      <div class="card-body" style="height: 320px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="statusChart" 
+                data-approved="{{ approved_leaves }}"
+                data-pending="{{ pending_leaves }}"
+                data-rejected="{{ total_leaves - approved_leaves - pending_leaves }}"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header flex-between">
+    <span class="card-title">Recent Leave Requests</span>
+    <a href="{{ url_for('warden.leave_approvals') }}" class="btn btn-sm btn-outline">View All</a>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Student</th><th>Duration</th><th>Status</th><th>Requested</th><th class="text-center">Actions</th></tr></thead>
+      <tbody>
+        {% for leave in recent_leaves %}
+        <tr>
+          <td>
+            <div class="flex-center gap-1" style="justify-content: flex-start;">
+              <span class="nav-avatar" style="width: 24px; height: 24px; font-size: 0.7rem;">{{ leave.student.name[0] }}</span>
+              {{ leave.student.name }}
+            </div>
+          </td>
+          <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
+          <td>
+            {% if leave.status == 'pending' %}<span class="badge badge-warning">Pending</span>
+            {% elif leave.status == 'approved' %}<span class="badge badge-success">Approved</span>
+            {% else %}<span class="badge badge-danger">Rejected</span>{% endif %}
+          </td>
+          <td class="text-muted">{{ leave.requested_at.strftime('%d %b %Y') }}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline btn-icon" onclick="viewDetails('{{ leave.id }}')" title="View Details">
+              <i class="hgi hgi-eye"></i>
+            </button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state">No recent leave requests</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Trend Chart
+  const trendCanvas = document.getElementById('leaveChart');
+  const trendLabels = JSON.parse(trendCanvas.dataset.labels || '[]');
+  const trendValues = JSON.parse(trendCanvas.dataset.values || '[]');
+  
+  new Chart(trendCanvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [{ 
+        label: 'Requests', 
+        data: trendValues,
+        borderColor: '#2563EB', 
+        backgroundColor: 'rgba(37,99,235,0.1)', 
+        tension: 0.3, 
+        fill: true,
+        pointBackgroundColor: '#2563EB',
+        pointRadius: 4
+      }]
+    },
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }, 
+      scales: { 
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        x: { grid: { display: false } }
+      } 
+    }
+  });
+
+  // Status Distribution Chart
+  const statusCanvas = document.getElementById('statusChart');
+  const approved = parseInt(statusCanvas.dataset.approved || 0);
+  const pending = parseInt(statusCanvas.dataset.pending || 0);
+  const rejected = parseInt(statusCanvas.dataset.rejected || 0);
+
+  new Chart(statusCanvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Approved', 'Pending', 'Rejected'],
+      datasets: [{ 
+        data: [approved, pending, rejected],
+        backgroundColor: ['#16A34A', '#D97706', '#DC2626'], 
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } 
+      },
+      cutout: '70%'
+    }
+  });
+});
+
+function viewDetails(id) { 
+  // In a real system, this would open a modal with AJAX data
+  alert('Viewing details for Leave #' + id); 
+}
+</script>
+{% endblock %}

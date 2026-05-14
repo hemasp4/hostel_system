@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}My Profile — HostelHub{% endblock %}
+
+{% block content %}
+<h1 class="page-title">My Profile</h1>
+
+<div class="row">
+  <div class="col-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Profile Information</span></div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('student.update_profile') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" name="name" value="{{ current_user.name }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" value="{{ current_user.email }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-control" name="phone" value="{{ current_user.phone }}" required>
+          </div>
+
+          <hr class="divider">
+          <p class="fw-600 mb-1" style="font-size:0.9rem;">Change Password</p>
+
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <input type="password" class="form-control" name="current_password">
+            <div class="form-hint">Leave blank if you don't want to change password</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input type="password" class="form-control" name="new_password" id="new_password">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" name="confirm_password" id="confirm_password">
+              <div class="form-error" id="pw-match-err" style="display:none;">Passwords do not match</div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="hgi hgi-floppy-disk"></i> Update Profile
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-2" style="flex:0 0 calc(35% - 0.625rem);">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Account Info</span></div>
+      <div class="card-body">
+        <div class="flex-center" style="flex-direction:column;gap:0.5rem;margin-bottom:1.25rem;">
+          <div style="width:60px;height:60px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem;font-weight:700;">
+            {{ current_user.name[0].upper() }}
+          </div>
+          <span class="badge badge-primary">{{ current_user.role|title }}</span>
+        </div>
+        <table class="table" style="font-size:0.875rem;">
+          <tr><td class="text-muted">Status</td><td><span class="badge badge-success">Active</span></td></tr>
+          <tr><td class="text-muted">Member Since</td><td>{{ current_user.created_at.strftime('%B %Y') }}</td></tr>
+          <tr><td class="text-muted">Total Leaves</td><td>{{ current_user.leaves.count() }}</td></tr>
+          <tr><td class="text-muted">Approved</td><td>{{ current_user.leaves.filter_by(status='approved').count() }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('confirm_password').addEventListener('input', function() {
+  const pw = document.getElementById('new_password').value;
+  const err = document.getElementById('pw-match-err');
+  err.style.display = (pw && this.value && pw !== this.value) ? 'block' : 'none';
+});
+document.querySelector('form').addEventListener('submit', function(e) {
+  const pw = document.getElementById('new_password').value;
+  const cpw = document.getElementById('confirm_password').value;
+  if (pw && pw !== cpw) { e.preventDefault(); alert('Passwords do not match!'); }
+});
+</script>
+{% endblock %}

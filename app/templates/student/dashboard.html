@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard — HostelHub{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Student Dashboard</h1>
+
+<!-- Active Leave Alert -->
+{% for leave in recent_leaves %}
+  {% if leave.status == 'approved' and leave.qr_code and leave.is_active() %}
+  <div class="alert alert-success">
+    <i class="hgi hgi-checkmark-circle-01"></i>
+    <div>
+      <strong>Active Leave Pass</strong> — Your leave from {{ leave.start_date }} to {{ leave.end_date }} is approved!
+    </div>
+    <div class="flex gap-1" style="margin-left:auto;">
+      <button class="btn btn-sm btn-success" onclick="showQR('{{ leave.qr_code }}', '{{ leave.id }}', '{{ leave.student.name }}')">
+        <i class="hgi hgi-qr-code"></i> Show QR
+      </button>
+      <button class="btn btn-sm btn-secondary" onclick="downloadQR('{{ leave.qr_code }}', '{{ leave.id }}')">
+        <i class="hgi hgi-download-01"></i> Download
+      </button>
+      <a href="{{ url_for('leave.print_leave', leave_id=leave.id) }}" class="btn btn-sm btn-outline">
+        <i class="hgi hgi-printer"></i> Print
+      </a>
+    </div>
+    <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+  </div>
+  {% endif %}
+{% endfor %}
+
+<!-- Stats -->
+<div class="row mb-2">
+  <div class="col-4">
+    <div class="stat-card stat-card-blue">
+      <div class="stat-label">Total Leaves</div>
+      <div class="stat-value blue">{{ total_leaves }}</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat-card stat-card-green">
+      <div class="stat-label">Approved</div>
+      <div class="stat-value green">{{ approved_leaves }}</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="stat-card stat-card-yellow">
+      <div class="stat-label">Pending</div>
+      <div class="stat-value yellow">{{ recent_leaves|selectattr('status','equalto','pending')|list|length }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-2">
+  <div class="card-header"><span class="card-title">Quick Actions</span></div>
+  <div class="card-body flex gap-1">
+    <a href="{{ url_for('leave.request_leave') }}" class="btn btn-primary">
+      <i class="hgi hgi-add-square"></i> New Leave Request
+    </a>
+    <a href="{{ url_for('leave.history') }}" class="btn btn-secondary">
+      <i class="hgi hgi-clock-01"></i> Leave History
+    </a>
+    <a href="{{ url_for('student.profile') }}" class="btn btn-outline">
+      <i class="hgi hgi-user-circle"></i> My Profile
+    </a>
+  </div>
+</div>
+
+<!-- Recent Leaves -->
+<div class="card">
+  <div class="card-header"><span class="card-title">Recent Leave Requests</span></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Requested</th><th>Leave Period</th><th>Reason</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in recent_leaves %}
+        <tr>
+          <td>{{ leave.requested_at.strftime('%d %b %Y') }}</td>
+          <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
+          <td>{{ leave.reason[:40] }}{% if leave.reason|length > 40 %}…{% endif %}</td>
+          <td>
+            {% if leave.status == 'pending' %}
+              <span class="badge badge-warning">Pending</span>
+            {% elif leave.status == 'approved' %}
+              <span class="badge badge-success">Approved</span>
+            {% elif leave.status == 'cancelled' %}
+              <span class="badge badge-secondary">Cancelled</span>
+            {% else %}
+              <span class="badge badge-danger">Rejected</span>
+            {% endif %}
+          </td>
+          <td class="flex gap-1">
+            {% if leave.status == 'approved' and leave.qr_code %}
+              <button class="btn btn-sm btn-primary" onclick="showQR('{{ leave.qr_code }}', '{{ leave.id }}', '{{ leave.student.name }}')">
+                <i class="hgi hgi-qr-code"></i>
+              </button>
+              <button class="btn btn-sm btn-success" onclick="downloadQR('{{ leave.qr_code }}', '{{ leave.id }}')">
+                <i class="hgi hgi-download-01"></i>
+              </button>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty-state">No leave requests yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-header">
+      <span class="modal-title">Leave QR Code</span>
+      <button class="modal-close" onclick="closeModal('qrModal')">×</button>
+    </div>
+    <div class="modal-body text-center">
+      <img id="qrImage" src="" alt="QR Code" style="max-width:260px;border-radius:8px;">
+      <p class="mt-1 text-muted text-sm">Show this QR at the gate — Leave #<span id="modalLeaveId"></span></p>
+      <div class="flex-center gap-1 mt-1">
+        <button class="btn btn-primary" onclick="downloadQRFromModal()"><i class="hgi hgi-download-01"></i> Download</button>
+        <button class="btn btn-secondary" onclick="printQR()"><i class="hgi hgi-printer"></i> Print</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentQRData = { qrCode:'', leaveId:'', studentName:'' };
+
+function showQR(qrCode, leaveId, studentName) {
+  currentQRData = { qrCode, leaveId, studentName };
+  document.getElementById('qrImage').src = qrCode;
+  document.getElementById('modalLeaveId').textContent = leaveId;
+  openModal('qrModal');
+}
+function downloadQR(qrCode, leaveId) {
+  const link = document.createElement('a');
+  link.href = qrCode;
+  link.download = `leave_qr_${leaveId}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+function downloadQRFromModal() { downloadQR(currentQRData.qrCode, currentQRData.leaveId); }
+function printQR() {
+  const w = window.open('','','height=600,width=600');
+  w.document.write(`<html><head><title>Leave Pass QR</title><style>body{text-align:center;font-family:Inter,sans-serif;padding:2rem}</style></head><body>
+    <h2>Hostel Leave Pass</h2>
+    <img src="${currentQRData.qrCode}" style="max-width:280px">
+    <p><strong>Leave ID:</strong> #${currentQRData.leaveId}</p>
+    <p>Show this QR code at the gate for verification</p>
+    <p><small>Generated: ${new Date().toLocaleString()}</small></p>
+  </body></html>`);
+  w.document.close(); w.print();
+}
+</script>
+{% endblock %}

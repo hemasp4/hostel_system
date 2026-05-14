@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title" style="margin:0;">Request Leave</h1>
+  <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">
+    <i class="hgi hgi-arrow-left-01"></i> Back to Dashboard
+  </a>
+</div>
+
+<div class="card" style="max-width: 640px;">
+  <div class="card-header"><span class="card-title">New Leave Request</span></div>
+  <div class="card-body">
+    <form method="POST" action="">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        {{ form.reason.label(class="form-label") }}
+        {{ form.reason(class="form-control", rows="4", placeholder="Please provide a detailed reason for your leave request (e.g., family function, medical appointment, etc.)") }}
+        {% for error in form.reason.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          {{ form.start_date.label(class="form-label") }}
+          {{ form.start_date(class="form-control", type="date") }}
+          {% for error in form.start_date.errors %}
+            <div class="form-error">{{ error }}</div>
+          {% endfor %}
+        </div>
+        <div class="form-group">
+          {{ form.end_date.label(class="form-label") }}
+          {{ form.end_date(class="form-control", type="date") }}
+          {% for error in form.end_date.errors %}
+            <div class="form-error">{{ error }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <i class="hgi hgi-information-circle"></i>
+        <span><strong>Note:</strong> Leave requests should be submitted at least 24 hours in advance and are subject to warden approval.</span>
+      </div>
+
+      <div class="flex-between mt-1">
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submit-leave">
+          <i class="hgi hgi-checkmark-circle-01"></i> Submit Request
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

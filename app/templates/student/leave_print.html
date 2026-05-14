@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Pass - #{{ leave.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        /* Hide everything except print content during printing */
+        body * {
+            visibility: hidden;
+        }
+        #printContent, #printContent * {
+            visibility: visible;
+        }
+        #printContent {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .navbar, .footer, .no-print {
+            display: none !important;
+        }
+    }
+    
+    #printContent {
+        background: white;
+        padding: 20px;
+        margin: 20px auto;
+        max-width: 800px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .pass-header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .pass-header h1 {
+        margin: 0;
+        color: #333;
+        font-size: 24px;
+    }
+    
+    .pass-header p {
+        margin: 5px 0;
+        color: #666;
+    }
+    
+    .pass-content {
+        margin-bottom: 30px;
+    }
+    
+    .info-row {
+        display: flex;
+        margin-bottom: 15px;
+        padding: 5px 0;
+        border-bottom: 1px dotted #eee;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        width: 150px;
+        color: #555;
+    }
+    
+    .info-value {
+        flex: 1;
+        color: #333;
+    }
+    
+    .qr-section {
+        text-align: center;
+        margin: 30px 0;
+        padding: 20px;
+        border: 2px dashed #ddd;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+    }
+    
+    .qr-section img {
+        max-width: 200px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background: white;
+    }
+    
+    .instructions {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+    }
+    
+    .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 50px;
+        padding-top: 30px;
+    }
+    
+    .signature-box {
+        text-align: center;
+        width: 200px;
+    }
+    
+    .signature-line {
+        border-bottom: 1px solid #333;
+        margin-bottom: 5px;
+        height: 40px;
+    }
+    
+    .print-actions {
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .print-btn {
+        background: #007bff;
+        color: white;
+        padding: 10px 30px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 10px;
+        font-size: 16px;
+    }
+    
+    .print-btn:hover {
+        background: #0056b3;
+    }
+    
+    .print-btn.secondary {
+        background: #6c757d;
+    }
+    
+    .print-btn.secondary:hover {
+        background: #545b62;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="print-actions no-print">
+                <button class="print-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Leave Pass
+                </button>
+                <button class="print-btn secondary" onclick="downloadPDF()">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+                <a href="{{ url_for('leave.history') }}" class="print-btn secondary" style="text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i> Back to History
+                </a>
+            </div>
+            
+            <div id="printContent">
+                <div class="pass-header">
+                    <h1>HOSTEL LEAVE PASS</h1>
+                    <p><strong>{{ config.HOSTEL_NAME|default('Student Hostel Management System') }}</strong></p>
+                    <p>Contact: {{ config.ADMIN_EMAIL|default('admin@hostel.com') }} | Phone: {{ config.ADMIN_PHONE|default('+1234567890') }}</p>
+                </div>
+                
+                <div class="pass-content">
+                    <div class="info-row">
+                        <div class="info-label">Leave ID:</div>
+                        <div class="info-value"><strong>#{{ leave.id }}</strong></div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Student Name:</div>
+                        <div class="info-value">{{ leave.student.name }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Student ID:</div>
+                        <div class="info-value">{{ leave.student.id }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Contact:</div>
+                        <div class="info-value">{{ leave.student.phone }} / {{ leave.student.email }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Room Number:</div>
+                        <div class="info-value">{{ leave.student.room_no|default('N/A') }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Leave Duration:</div>
+                        <div class="info-value">
+                            <strong>{{ leave.start_date.strftime('%B %d, %Y') }}</strong> to 
+                            <strong>{{ leave.end_date.strftime('%B %d, %Y') }}</strong>
+                            ({{ (leave.end_date - leave.start_date).days + 1 }} days)
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Reason:</div>
+                        <div class="info-value">{{ leave.reason }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Approved By:</div>
+                        <div class="info-value">{{ leave.approver.name if leave.approver else 'N/A' }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Approved On:</div>
+                        <div class="info-value">{{ leave.approved_at.strftime('%B %d, %Y at %I:%M %p') if leave.approved_at else 'N/A' }}</div>
+                    </div>
+                </div>
+                
+                {% if leave.qr_code %}
+                <div class="qr-section">
+                    <h3>QR Code for Gate Verification</h3>
+                    <img src="{{ leave.qr_code }}" alt="QR Code for Leave #{{ leave.id }}">
+                    <p class="text-muted">Scan this code at the gate for entry/exit verification</p>
+                </div>
+                {% endif %}
+                
+                <div class="instructions">
+                    <h5><i class="fas fa-exclamation-circle"></i> Important Instructions:</h5>
+                    <ul class="mb-0">
+                        <li>This pass must be presented at the gate during exit and entry</li>
+                        <li>Student must return on or before <strong>{{ leave.end_date.strftime('%B %d, %Y') }}</strong></li>
+                        <li>Any extension requires prior approval from the warden</li>
+                        <li>Loss of this pass should be reported immediately to the warden</li>
+                        <li>This pass is valid only for the mentioned dates</li>
+                    </ul>
+                </div>
+                
+                <div class="signature-section">
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p class="mb-0">Student Signature</p>
+                        <small class="text-muted">{{ leave.student.name }}</small>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p class="mb-0">Warden Signature</p>
+                        <small class="text-muted">{{ leave.approver.name if leave.approver else '' }}</small>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p class="mb-0">Date & Stamp</p>
+                        <small class="text-muted">{{ leave.approved_at.strftime('%d/%m/%Y') if leave.approved_at else '' }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function downloadPDF() {
+    // This would typically use a library like jsPDF or make a server request
+    alert('PDF download functionality would be implemented here');
+    // Example implementation:
+    // window.location.href = "{{ url_for('leave.print_leave', leave_id=leave.id) }}";
+}
+
+// Auto-print option
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('autoprint') === 'true') {
+    window.onload = function() {
+        window.print();
+    };
+}
+</script>
+{% endblock %}

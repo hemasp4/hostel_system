@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Leave Approvals — HostelHub{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Leave Approvals</h1>
+
+<!-- Pending -->
+<div class="card mb-2">
+  <div class="card-header" style="background:var(--yellow-light);">
+    <span class="card-title" style="color:var(--yellow);">
+      <i class="hgi hgi-clock-01"></i> Pending Leave Requests
+    </span>
+    <span class="badge badge-warning">{{ pending_leaves|length }}</span>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Student</th><th>Room</th><th>Duration</th><th>Days</th><th>Reason</th><th>Requested</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% if pending_leaves %}
+          {% for leave in pending_leaves %}
+          <tr>
+            <td>{{ leave.student.name }}</td>
+            <td>{{ leave.student.room_no if leave.student.room_no else '—' }}</td>
+            <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
+            <td>{{ (leave.end_date - leave.start_date).days + 1 }}</td>
+            <td>{{ leave.reason[:50] }}…</td>
+            <td>{{ leave.requested_at.strftime('%d %b %Y %H:%M') }}</td>
+            <td class="flex gap-1">
+              <a href="{{ url_for('warden.approve_leave', leave_id=leave.id) }}"
+                 class="btn btn-sm btn-success"
+                 onclick="return confirm('Approve this leave request?')">
+                <i class="hgi hgi-checkmark-01"></i> Approve
+              </a>
+              <button class="btn btn-sm btn-danger" onclick="showRejectModal({{ leave.id }})">
+                <i class="hgi hgi-cancel-01"></i> Reject
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7"><div class="empty-state"><i class="hgi hgi-checkmark-circle-01"></i>No pending requests</div></td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Recent Actions -->
+<div class="card">
+  <div class="card-header"><span class="card-title">Recent Actions</span></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Student</th><th>Duration</th><th>Status</th><th>Action Date</th><th>Remarks</th></tr>
+      </thead>
+      <tbody>
+        {% if recent_actions %}
+          {% for leave in recent_actions %}
+          <tr>
+            <td>{{ leave.student.name }}</td>
+            <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
+            <td>
+              {% if leave.status == 'approved' %}
+                <span class="badge badge-success">Approved</span>
+              {% else %}
+                <span class="badge badge-danger">Rejected</span>
+              {% endif %}
+            </td>
+            <td>{{ leave.approved_at.strftime('%d %b %Y %H:%M') if leave.approved_at else '—' }}</td>
+            <td>{{ leave.remarks or '—' }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="5"><div class="empty-state">No recent actions</div></td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Reject Leave Request</span>
+      <button class="modal-close" onclick="closeModal('rejectModal')">×</button>
+    </div>
+    <form method="POST" id="rejectForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Reason for Rejection</label>
+          <textarea name="remarks" class="form-control" rows="3" required placeholder="Provide a reason..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('rejectModal')">Cancel</button>
+        <button type="submit" class="btn btn-danger"><i class="hgi hgi-cancel-01"></i> Reject Leave</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showRejectModal(leaveId) {
+  document.getElementById('rejectForm').action = `/warden/leave/reject/${leaveId}`;
+  openModal('rejectModal');
+}
+</script>
+{% endblock %}

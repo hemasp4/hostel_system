@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Hostel Management System{% endblock %}</title>
+  <meta name="description" content="Hostel Management System — Leave, Attendance & QR Gate Pass">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hugeicons -->
+  <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar-brand" href="{{ url_for('main.landing') }}">
+      <i class="hgi hgi-building-01" style="font-size:1.2rem;"></i>
+      HostelHub
+    </a>
+
+    <ul class="navbar-nav">
+      {% if current_user.is_authenticated %}
+        <li class="nav-item">
+          <span class="nav-user">
+            <span class="nav-avatar">{{ current_user.name[0].upper() }}</span>
+            {{ current_user.name.split()[0] }}
+            <span class="badge badge-primary" style="font-size:0.7rem;">{{ current_user.role|title }}</span>
+          </span>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('auth.logout') }}">
+            <i class="hgi hgi-logout-01"></i> Logout
+          </a>
+        </li>
+      {% else %}
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">Register</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="padding: 0.75rem 1.5rem 0;">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else category }}" id="flash-{{ loop.index }}">
+            <i class="hgi hgi-{{ 'checkmark-circle-01' if category == 'success' else 'alert-circle' if category == 'danger' else 'information-circle' }}"></i>
+            <span>{{ message }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Layout -->
+  {% block main_wrapper %}
+  <div class="app-wrapper">
+    {% if current_user.is_authenticated %}
+      <aside class="sidebar">
+        {% include 'components/sidebar.html' %}
+      </aside>
+    {% endif %}
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% endblock %}
+
+  <!-- Footer -->
+  <footer>
+    © 2025 HostelHub Management System. All rights reserved.
+  </footer>
+
+  <!-- jQuery (kept for existing JS compatibility) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Custom JS -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  <!-- Modal JS (replaces Bootstrap modal) -->
+  <script>
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    // Close on overlay click
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+    // Auto-dismiss flash messages after 5s
+    setTimeout(function() {
+      document.querySelectorAll('.alert').forEach(function(a) {
+        a.style.opacity = '0';
+        a.style.transition = 'opacity 0.4s';
+        setTimeout(function() { a.remove(); }, 400);
+      });
+    }, 5000);
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,51 @@
+{% if current_user.role == 'student' %}
+  <div class="sidebar-label">Student</div>
+  <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {{ 'active' if request.endpoint == 'student.dashboard' }}">
+    <i class="hgi hgi-dashboard-square-01"></i> Dashboard
+  </a>
+  <a href="{{ url_for('leave.request_leave') }}" class="sidebar-link {{ 'active' if request.endpoint == 'leave.request_leave' }}">
+    <i class="hgi hgi-add-square"></i> Request Leave
+  </a>
+  <a href="{{ url_for('leave.history') }}" class="sidebar-link {{ 'active' if request.endpoint == 'leave.history' }}">
+    <i class="hgi hgi-clock-01"></i> Leave History
+  </a>
+  <a href="{{ url_for('student.profile') }}" class="sidebar-link {{ 'active' if request.endpoint == 'student.profile' }}">
+    <i class="hgi hgi-user-circle"></i> My Profile
+  </a>
+
+{% elif current_user.role == 'warden' %}
+  <div class="sidebar-label">Warden</div>
+  <a href="{{ url_for('warden.dashboard') }}" class="sidebar-link {{ 'active' if request.endpoint == 'warden.dashboard' }}">
+    <i class="hgi hgi-dashboard-square-01"></i> Dashboard
+  </a>
+  <a href="{{ url_for('warden.leave_approvals') }}" class="sidebar-link {{ 'active' if request.endpoint == 'warden.leave_approvals' }}">
+    <i class="hgi hgi-checkmark-square-01"></i> Leave Approvals
+  </a>
+  <a href="{{ url_for('warden.qr_scanner') }}" class="sidebar-link {{ 'active' if request.endpoint == 'warden.qr_scanner' }}">
+    <i class="hgi hgi-qr-code"></i> QR Scanner
+  </a>
+  <a href="{{ url_for('warden.attendance') }}" class="sidebar-link {{ 'active' if request.endpoint == 'warden.attendance' }}">
+    <i class="hgi hgi-task-01"></i> Attendance
+  </a>
+  <a href="{{ url_for('warden.student_status') }}" class="sidebar-link {{ 'active' if request.endpoint == 'warden.student_status' }}">
+    <i class="hgi hgi-user-check-01"></i> Student Status
+  </a>
+  <a href="{{ url_for('warden.students_list') }}" class="sidebar-link {{ 'active' if request.endpoint == 'warden.students_list' }}">
+    <i class="hgi hgi-user-group"></i> Students List
+  </a>
+
+{% elif current_user.role == 'admin' %}
+  <div class="sidebar-label">Admin</div>
+  <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.dashboard' }}">
+    <i class="hgi hgi-dashboard-square-01"></i> Dashboard
+  </a>
+  <a href="{{ url_for('admin.user_management') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.user_management' }}">
+    <i class="hgi hgi-user-group"></i> Users
+  </a>
+  <a href="{{ url_for('warden.student_status') }}" class="sidebar-link">
+    <i class="hgi hgi-user-check-01"></i> Student Status
+  </a>
+  <a href="{{ url_for('admin.settings') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin.settings' }}">
+    <i class="hgi hgi-settings-01"></i> Settings
+  </a>
+{% endif %}

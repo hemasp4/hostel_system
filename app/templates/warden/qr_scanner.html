@@ -1,0 +1,705 @@
+{% extends "base.html" %}
+
+{% block title %}QR Scanner - Hostel Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    #reader {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .scanner-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .upload-section {
+        margin-top: 20px;
+        padding: 20px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+    }
+    
+    .upload-section:hover {
+        border-color: #6c757d;
+        background: #e9ecef;
+    }
+    
+    #fileInput {
+        display: none;
+    }
+    
+    /* Enhanced styles for student details */
+    .student-details-card {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 15px;
+    }
+    
+    .student-photo-placeholder {
+        width: 120px;
+        height: 120px;
+        background: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        color: #6c757d;
+        margin: 0 auto;
+    }
+    
+    .detail-row {
+        border-bottom: 1px solid #e9ecef;
+        padding: 10px 0;
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        width: 140px;
+        display: inline-block;
+    }
+    
+    .detail-value {
+        color: #212529;
+    }
+    
+    .qr-status-valid {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .qr-status-invalid {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .qr-status-processing {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        {% include 'components/sidebar.html' %}
+    </div>
+    
+    <div class="col-md-9">
+        <h2 class="mb-4">QR Code Scanner</h2>
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card scanner-container">
+                    <div class="card-body">
+                        <h4 class="card-title text-center mb-4">Scan Student QR Code</h4>
+                        
+                        <!-- QR Scanner -->
+                        <div id="reader"></div>
+                        
+                        <!-- Scanner Controls -->
+                        <div class="text-center mt-3">
+                            <button id="startButton" class="btn btn-primary" onclick="startScanning()">
+                                <i class="hgi hgi-camera-01"></i> Start Camera Scan
+                            </button>
+                            <button id="stopButton" class="btn btn-danger" onclick="stopScanning()" style="display:none;">
+                                <i class="hgi hgi-stop"></i> Stop Scanning
+                            </button>
+                            <button class="btn btn-success" onclick="triggerFileUpload()">
+                                <i class="hgi hgi-upload-01"></i> Upload QR Image
+                            </button>
+                        </div>
+                        
+                        <!-- File Upload Section -->
+                        <div class="upload-section" id="uploadSection">
+                            <i class="hgi hgi-cloud-upload"></i>
+                            <p class="mb-0">Click to upload QR code image</p>
+                            <small class="text-muted">or drag and drop here</small>
+                        </div>
+                        <input type="file" id="fileInput" accept="image/*">
+                        
+                        <!-- Enhanced Scan Result Section -->
+                        <div id="scanResult" style="display: none; margin-top: 20px;">
+                            <div id="qrStatusMessage"></div>
+                            
+                            <!-- Valid QR Code Details -->
+                            <div id="validQRDetails" style="display: none;">
+                                <div class="student-details-card">
+                                    <h5 class="text-center mb-4">Student Leave Details</h5>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4 text-center">
+                                            <div class="student-photo-placeholder">
+                                                <i class="hgi hgi-user-circle"></i>
+                                            </div>
+                                            <h6 class="mt-3" id="studentNameLarge"></h6>
+                                            <span class="badge bg-primary" id="studentIdBadge"></span>
+                                        </div>
+                                        
+                                        <div class="col-md-8">
+                                            <div class="detail-row">
+                                                <span class="detail-label">Leave ID:</span>
+                                                <span class="detail-value" id="leaveId"></span>
+                                            </div>
+                                            
+                                            <div class="detail-row">
+                                                <span class="detail-label">Student Name:</span>
+                                                <span class="detail-value" id="studentNameDetail"></span>
+                                            </div>
+                                            
+                                            <div class="detail-row">
+                                                <span class="detail-label">Contact:</span>
+                                                <span class="detail-value" id="studentContact"></span>
+                                            </div>
+                                            
+                                            <div class="detail-row">
+                                                <span class="detail-label">Leave Duration:</span>
+                                                <span class="detail-value" id="leaveDurationDetail"></span>
+                                            </div>
+                                            
+                                            <div class="detail-row">
+                                                <span class="detail-label">Days:</span>
+                                                <span class="detail-value" id="leaveDays"></span>
+                                            </div>
+                                            
+                                            <div class="detail-row">
+                                                <span class="detail-label">Scan Type:</span>
+                                                <span class="detail-value">
+                                                    <span id="scanTypeBadge" class="badge"></span>
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="detail-row">
+                                                <span class="detail-label">Scan Time:</span>
+                                                <span class="detail-value" id="scanTimeDetail"></span>
+                                            </div>
+                                            
+                                            <div class="detail-row">
+                                                <span class="detail-label">Gate:</span>
+                                                <span class="detail-value">Main Gate</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3 text-center">
+                                        <button class="btn btn-success" onclick="confirmScan()">
+                                            <i class="fas fa-check"></i> Confirm & Allow
+                                        </button>
+                                        <button class="btn btn-secondary ms-2" onclick="resetScanner()">
+                                            <i class="hgi hgi-refresh"></i> Scan Another
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Invalid QR Code Message -->
+                            <div id="invalidQRDetails" style="display: none;">
+                                <div class="text-center">
+                                    <i class="hgi hgi-alert-circle"></i>
+                                    <h5>Invalid QR Code</h5>
+                                    <p id="errorMessage" class="text-muted"></p>
+                                    <button class="btn btn-primary mt-3" onclick="resetScanner()">
+                                        <i class="hgi hgi-refresh"></i> Try Again
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Today's Statistics -->
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Today's Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Scans:</span>
+                            <strong id="totalScans">0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Exits:</span>
+                            <strong id="totalExits" class="text-danger">0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Entries:</span>
+                            <strong id="totalEntries" class="text-success">0</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Scans -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Scans</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div id="recentScans">
+                            <p class="text-muted text-center">No scans yet today</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Load the library first -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+// Wait for library to load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, checking Html5Qrcode availability...');
+    
+    // Check if library is loaded
+    if (typeof Html5Qrcode === 'undefined') {
+        console.error('Html5Qrcode library not loaded! Loading from alternative CDN...');
+        // Try alternative CDN
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
+        script.onload = function() {
+            console.log('Html5Qrcode loaded from alternative CDN');
+            initializeApp();
+        };
+        document.head.appendChild(script);
+    } else {
+        console.log('Html5Qrcode library loaded successfully');
+        initializeApp();
+    }
+});
+
+// Global variables
+let html5QrCode = null;
+let isScanning = false;
+let todayStats = {
+    total: 0,
+    exits: 0,
+    entries: 0
+};
+
+// Initialize the application
+function initializeApp() {
+    console.log('Initializing QR Scanner application...');
+    
+    // Set up file input listener
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+    
+    // Set up upload section click
+    const uploadSection = document.getElementById('uploadSection');
+    if (uploadSection) {
+        uploadSection.addEventListener('click', triggerFileUpload);
+        
+        // Drag and drop
+        uploadSection.addEventListener('dragover', handleDragOver);
+        uploadSection.addEventListener('dragleave', handleDragLeave);
+        uploadSection.addEventListener('drop', handleDrop);
+    }
+}
+
+// Initialize scanner
+function initializeScanner() {
+    if (!html5QrCode && typeof Html5Qrcode !== 'undefined') {
+        html5QrCode = new Html5Qrcode("reader");
+        console.log('Scanner initialized');
+    }
+}
+
+// Start camera scanning
+function startScanning() {
+    console.log('Starting camera scan...');
+    
+    if (isScanning) {
+        console.log('Already scanning');
+        return;
+    }
+    
+    // Initialize scanner if needed
+    initializeScanner();
+    
+    if (!html5QrCode) {
+        alert('QR Scanner not initialized. Please refresh the page.');
+        return;
+    }
+    
+    // Camera config
+    const config = { 
+        fps: 10, 
+        qrbox: {width: 250, height: 250}
+    };
+    
+    // Start scanning
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText, decodedResult) => {
+            console.log('QR Code detected:', decodedText);
+            onScanSuccess(decodedText);
+        },
+        (errorMessage) => {
+            // Ignore errors, they happen continuously while scanning
+        }
+    ).then(() => {
+        isScanning = true;
+        document.getElementById('startButton').style.display = 'none';
+        document.getElementById('stopButton').style.display = 'inline-block';
+        console.log('Camera started successfully');
+    }).catch((err) => {
+        console.error('Unable to start camera:', err);
+        alert('Unable to access camera. Please ensure camera permissions are granted.');
+    });
+}
+
+// Stop camera scanning
+function stopScanning() {
+    console.log('Stopping camera scan...');
+    
+    if (!isScanning || !html5QrCode) {
+        console.log('Not scanning');
+        return;
+    }
+    
+    html5QrCode.stop().then(() => {
+        isScanning = false;
+        document.getElementById('startButton').style.display = 'inline-block';
+        document.getElementById('stopButton').style.display = 'none';
+        console.log('Camera stopped');
+    }).catch((err) => {
+        console.error('Error stopping camera:', err);
+    });
+}
+
+// Trigger file upload
+function triggerFileUpload() {
+    document.getElementById('fileInput').click();
+}
+
+// Handle file selection
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    console.log('File selected:', file.name);
+    
+    // Stop camera if running
+    if (isScanning) {
+        stopScanning();
+    }
+    
+    // Initialize scanner if needed
+    initializeScanner();
+    
+    if (!html5QrCode) {
+        alert('QR Scanner not initialized. Please refresh the page.');
+        return;
+    }
+    
+    // Show processing message
+    showProcessingMessage();
+    
+    // Scan the file
+    html5QrCode.scanFile(file, true)
+        .then(decodedText => {
+            console.log('QR Code found in image:', decodedText);
+            onScanSuccess(decodedText);
+        })
+        .catch(err => {
+            console.error('Error scanning file:', err);
+            showError('No valid QR code found in the image. Please try another image.');
+        });
+    
+    // Reset file input
+    event.target.value = '';
+}
+
+// Handle successful scan
+function onScanSuccess(decodedText) {
+    console.log('Processing QR code:', decodedText);
+    
+    // Stop scanning if camera is active
+    if (isScanning) {
+        stopScanning();
+    }
+    
+    // Play sound
+    playSound('scan');
+    
+    // Send to backend
+    fetch('/qr/scan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ qr_code: decodedText })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Backend response:', data);
+        showScanResult(data);
+        if (data.success) {
+            updateStatistics(data);
+            addToRecentScans(data);
+        }
+    })
+    .catch(error => {
+        console.error('Error processing QR code:', error);
+        showError('Failed to process QR code. Please check your connection.');
+    });
+}
+
+// Show processing message
+function showProcessingMessage() {
+    const resultDiv = document.getElementById('scanResult');
+    const statusMessage = document.getElementById('qrStatusMessage');
+    
+    resultDiv.style.display = 'block';
+    statusMessage.className = 'qr-status-processing';
+    statusMessage.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="spinner-border text-warning me-3" role="status">
+                <span class="visually-hidden">Processing...</span>
+            </div>
+            <div>
+                <h5 class="mb-0">Processing Image</h5>
+                <p class="mb-0">Scanning for QR code...</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('validQRDetails').style.display = 'none';
+    document.getElementById('invalidQRDetails').style.display = 'none';
+}
+
+// Show scan result
+function showScanResult(data) {
+    const resultDiv = document.getElementById('scanResult');
+    const statusMessage = document.getElementById('qrStatusMessage');
+    const validDetails = document.getElementById('validQRDetails');
+    const invalidDetails = document.getElementById('invalidQRDetails');
+    
+    resultDiv.style.display = 'block';
+    
+    if (data.success) {
+        // Show success status
+        statusMessage.className = 'qr-status-valid';
+        statusMessage.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="hgi hgi-checkmark-circle-01"></i>
+                <div>
+                    <h5 class="mb-0">Valid QR Code</h5>
+                    <p class="mb-0">${data.message}</p>
+                </div>
+            </div>
+        `;
+        
+        // Populate student details
+        document.getElementById('leaveId').textContent = `#${data.leave_id || 'N/A'}`;
+        document.getElementById('studentNameLarge').textContent = data.student_name || 'N/A';
+        document.getElementById('studentIdBadge').textContent = `ID: ${data.student_id || 'N/A'}`;
+        document.getElementById('studentNameDetail').textContent = data.student_name || 'N/A';
+        document.getElementById('studentContact').textContent = data.student_contact || 'N/A';
+        document.getElementById('leaveDurationDetail').textContent = data.leave_dates || 'N/A';
+        document.getElementById('leaveDays').textContent = `${data.leave_days || 'N/A'} days`;
+        document.getElementById('scanTimeDetail').textContent = data.timestamp || new Date().toLocaleString();
+        
+        // Set scan type badge
+        const scanTypeBadge = document.getElementById('scanTypeBadge');
+        if (data.scan_type) {
+            scanTypeBadge.textContent = data.scan_type.toUpperCase();
+            scanTypeBadge.className = data.scan_type === 'exit' ? 'badge bg-danger' : 'badge bg-success';
+        }
+        
+        validDetails.style.display = 'block';
+        invalidDetails.style.display = 'none';
+        
+        playSound('success');
+    } else {
+        // Show error status
+        statusMessage.className = 'qr-status-invalid';
+        statusMessage.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="hgi hgi-cancel-circle"></i>
+                <div>
+                    <h5 class="mb-0">Invalid QR Code</h5>
+                    <p class="mb-0">The scanned QR code is not valid or has expired.</p>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('errorMessage').textContent = data.message || 'This QR code is not recognized in our system.';
+        
+        validDetails.style.display = 'none';
+        invalidDetails.style.display = 'block';
+        
+        playSound('error');
+    }
+}
+
+// Show error message
+function showError(message) {
+    showScanResult({
+        success: false,
+        message: message
+    });
+}
+
+// Update statistics
+function updateStatistics(data) {
+    todayStats.total++;
+    if (data.scan_type === 'exit') {
+        todayStats.exits++;
+    } else {
+        todayStats.entries++;
+    }
+    
+    document.getElementById('totalScans').textContent = todayStats.total;
+    document.getElementById('totalExits').textContent = todayStats.exits;
+    document.getElementById('totalEntries').textContent = todayStats.entries;
+}
+
+// Add to recent scans
+function addToRecentScans(data) {
+    const recentScansDiv = document.getElementById('recentScans');
+    
+    // Clear the "no scans" message if it exists
+    if (recentScansDiv.querySelector('.text-muted')) {
+        recentScansDiv.innerHTML = '';
+    }
+    
+    // Create new scan entry
+    const scanEntry = document.createElement('div');
+    scanEntry.className = 'border-bottom pb-2 mb-2';
+    scanEntry.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>${data.student_name}</strong><br>
+                <small class="text-muted">${data.timestamp}</small>
+            </div>
+            <span class="badge ${data.scan_type === 'exit' ? 'bg-danger' : 'bg-success'}">
+                ${data.scan_type.toUpperCase()}
+            </span>
+        </div>
+    `;
+    
+    // Add to top of list
+    recentScansDiv.insertBefore(scanEntry, recentScansDiv.firstChild);
+    
+    // Keep only last 10 entries
+    while (recentScansDiv.children.length > 10) {
+        recentScansDiv.removeChild(recentScansDiv.lastChild);
+    }
+}
+
+// Reset scanner
+function resetScanner() {
+    document.getElementById('scanResult').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+}
+
+// Confirm scan
+function confirmScan() {
+    const confirmMessage = document.createElement('div');
+    confirmMessage.className = 'alert alert-success alert-dismissible fade show mt-3';
+    confirmMessage.innerHTML = `
+        <strong>Access Granted!</strong> Student has been allowed to pass.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.getElementById('validQRDetails').appendChild(confirmMessage);
+    
+    setTimeout(() => {
+        resetScanner();
+    }, 2000);
+}
+
+// Play sound
+function playSound(type) {
+    try {
+        const audio = new Audio();
+        audio.volume = 0.3;
+        
+        if (type === 'scan' || type === 'success') {
+            // Success beep - simple tone
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            gainNode.gain.value = 0.3;
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+    } catch (e) {
+        console.log('Audio error:', e);
+    }
+}
+
+// Drag and drop handlers
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.style.background = '#e9ecef';
+    e.currentTarget.style.borderColor = '#6c757d';
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.currentTarget.style.background = '#f8f9fa';
+    e.currentTarget.style.borderColor = '#dee2e6';
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.style.background = '#f8f9fa';
+    e.currentTarget.style.borderColor = '#dee2e6';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const fileInput = document.getElementById('fileInput');
+        fileInput.files = files;
+        handleFileSelect({ target: { files: files } });
+    }
+}
+</script>
+{% endblock %}

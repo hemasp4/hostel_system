@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Students List — HostelHub{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Students List</h1>
+
+<div class="card mb-2">
+  <div class="card-body">
+    <div class="input-group" style="max-width:400px;">
+      <input type="text" class="form-control" id="studentSearch" placeholder="Search by name, email or phone…">
+      <button class="btn btn-primary"><i class="hgi hgi-search-01"></i> Search</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">All Students ({{ student_stats|length }})</span>
+    <button class="btn btn-sm btn-success" onclick="exportToExcel()">
+      <i class="hgi hgi-file-export"></i> Export CSV
+    </button>
+  </div>
+  <div class="table-wrap">
+    <table class="table" id="studentsTable">
+      <thead>
+        <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Room</th><th>Total Leaves</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for stat in student_stats %}
+        <tr>
+          <td>{{ stat.student.id }}</td>
+          <td>{{ stat.student.name }}</td>
+          <td>{{ stat.student.email }}</td>
+          <td>{{ stat.student.phone }}</td>
+          <td>{{ stat.student.room_no if stat.student.room_no else '—' }}</td>
+          <td>{{ stat.total_leaves }}</td>
+          <td>
+            {% if stat.active_leave %}
+              <span class="badge badge-warning">On Leave</span>
+            {% else %}
+              <span class="badge badge-success">Present</span>
+            {% endif %}
+          </td>
+          <td class="flex gap-1">
+            <button class="btn btn-sm btn-outline" onclick="viewStudentDetails({{ stat.student.id }})">
+              <i class="hgi hgi-eye"></i>
+            </button>
+            <a href="{{ url_for('warden.student_leaves', student_id=stat.student.id) }}" class="btn btn-sm btn-primary">
+              <i class="hgi hgi-clock-01"></i>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state"><i class="hgi hgi-user-group"></i>No students found</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal-overlay" id="studentDetailsModal">
+  <div class="modal-box modal-box-lg">
+    <div class="modal-header">
+      <span class="modal-title">Student Details</span>
+      <button class="modal-close" onclick="closeModal('studentDetailsModal')">×</button>
+    </div>
+    <div class="modal-body" id="studentDetailsContent"></div>
+  </div>
+</div>
+
+<script>
+document.getElementById('studentSearch').addEventListener('keyup', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#studentsTable tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+function viewStudentDetails(id) {
+  fetch(`/warden/student/${id}/details`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('studentDetailsContent').innerHTML = `
+        <div class="row">
+          <div class="col-2"><h4 style="font-size:0.9rem;font-weight:600;margin-bottom:0.75rem;">Personal Info</h4>
+            <table class="table"><tr><td>Name</td><td>${data.name}</td></tr><tr><td>Email</td><td>${data.email}</td></tr>
+            <tr><td>Phone</td><td>${data.phone}</td></tr><tr><td>Room</td><td>${data.room_no||'N/A'}</td></tr></table>
+          </div>
+          <div class="col-2"><h4 style="font-size:0.9rem;font-weight:600;margin-bottom:0.75rem;">Leave Stats</h4>
+            <table class="table"><tr><td>Total</td><td>${data.total_leaves}</td></tr><tr><td>Approved</td><td>${data.approved_leaves}</td></tr>
+            <tr><td>Rejected</td><td>${data.rejected_leaves}</td></tr><tr><td>Pending</td><td>${data.pending_leaves}</td></tr></table>
+          </div>
+        </div>`;
+      openModal('studentDetailsModal');
+    });
+}
+function exportToExcel() { exportTableToCSV('studentsTable', 'students_list.csv'); }
+</script>
+{% endblock %}
