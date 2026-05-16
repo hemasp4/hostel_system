@@ -923,14 +923,23 @@ footer {
   }
 }
 /* Professional action buttons */
-.btn i {
+.btn i, .hugeicon i, .hgi i {
   width: 1.2em;
   height: 1.2em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 0;
+  line-height: 1;
   margin-top: -1px; /* Subtle adjustment for optical centering */
+}
+
+/* Global Hugeicons support */
+.hugeicon, .hgi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
 }
 .btn-info {
   background: var(--blue-light);
