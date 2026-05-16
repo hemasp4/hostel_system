@@ -27,18 +27,25 @@
       HostelHub
     </a>
 
+    {% if current_user.is_authenticated %}
+      <button type="button" class="mobile-menu-btn" id="mobileMenuToggle" aria-label="Open navigation menu" aria-controls="appSidebar" aria-expanded="false">
+        <i class="hgi hgi-menu-01"></i>
+        <span>Menu</span>
+      </button>
+    {% endif %}
+
     <ul class="navbar-nav">
       {% if current_user.is_authenticated %}
         <li class="nav-item">
-          <span class="nav-user">
+          <span class="nav-user" title="{{ current_user.name }}">
             <span class="nav-avatar">{{ current_user.name[0].upper() }}</span>
-            {{ current_user.name.split()[0] }}
+            <span class="nav-name">{{ current_user.name.split()[0] }}</span>
             <span class="badge badge-primary" style="font-size:0.7rem;">{{ current_user.role|title }}</span>
           </span>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('auth.logout') }}">
-            <i class="hgi hgi-logout-01"></i> Logout
+          <a class="nav-link logout-link" href="{{ url_for('auth.logout') }}" aria-label="Logout">
+            <i class="hgi hgi-logout-01"></i> <span class="logout-text">Logout</span>
           </a>
         </li>
       {% else %}
@@ -67,7 +74,8 @@
   {% block main_wrapper %}
   <div class="app-wrapper">
     {% if current_user.is_authenticated %}
-      <aside class="sidebar">
+      <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close navigation menu"></button>
+      <aside class="sidebar" id="appSidebar">
         {% include 'components/sidebar.html' %}
       </aside>
     {% endif %}
@@ -98,6 +106,32 @@
       document.getElementById(id).classList.remove('active');
       document.body.style.overflow = '';
     }
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const appSidebar = document.getElementById('appSidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+    function openMobileSidebar() {
+      if (!appSidebar || !mobileMenuToggle) return;
+      appSidebar.classList.add('mobile-open');
+      document.body.classList.add('sidebar-open');
+      mobileMenuToggle.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMobileSidebar() {
+      if (!appSidebar || !mobileMenuToggle) return;
+      appSidebar.classList.remove('mobile-open');
+      document.body.classList.remove('sidebar-open');
+      mobileMenuToggle.setAttribute('aria-expanded', 'false');
+    }
+
+    if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openMobileSidebar);
+    if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+    document.querySelectorAll('.sidebar-link').forEach(function(link) {
+      link.addEventListener('click', closeMobileSidebar);
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeMobileSidebar();
+    });
     // Close on overlay click
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('modal-overlay')) {

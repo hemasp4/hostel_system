@@ -57,23 +57,24 @@
               {% elif leave.status == 'cancelled' %}<span class="badge badge-secondary">Cancelled</span>
               {% else %}<span class="badge badge-danger">Rejected</span>{% endif %}
             </td>
-            <td class="flex gap-1">
+            <td><div class="action-group">
               <button class="btn btn-sm btn-outline" onclick="viewDetails('{{ leave.id }}')">
-                <i class="hgi hgi-eye"></i>
+                <i class="hgi hgi-eye"></i> View
               </button>
               {% if leave.status == 'approved' and leave.qr_code %}
                 <button class="btn btn-sm btn-primary" onclick="showQR('{{ leave.qr_code }}')">
-                  <i class="hgi hgi-qr-code"></i>
+                  <i class="hgi hgi-qr-code"></i> QR
                 </button>
               {% endif %}
               {% if leave.status == 'pending' %}
                 <form method="POST" action="{{ url_for('leave.cancel_leave', leave_id=leave.id) }}" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this leave request?')">
-                    <i class="hgi hgi-cancel-01"></i>
+                    <i class="hgi hgi-cancel-01"></i> Cancel
                   </button>
                 </form>
               {% endif %}
+          </div>
             </td>
           </tr>
           {% endfor %}

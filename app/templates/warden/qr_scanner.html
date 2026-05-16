@@ -108,166 +108,158 @@
 {% endblock %}
 
 {% block content %}
+<h2 class="mb-4">QR Code Scanner</h2>
+
 <div class="row">
-    <div class="col-md-3">
-        {% include 'components/sidebar.html' %}
-    </div>
-    
-    <div class="col-md-9">
-        <h2 class="mb-4">QR Code Scanner</h2>
-        
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card scanner-container">
-                    <div class="card-body">
-                        <h4 class="card-title text-center mb-4">Scan Student QR Code</h4>
-                        
-                        <!-- QR Scanner -->
-                        <div id="reader"></div>
-                        
-                        <!-- Scanner Controls -->
-                        <div class="text-center mt-3">
-                            <button id="startButton" class="btn btn-primary" onclick="startScanning()">
-                                <i class="hgi hgi-camera-01"></i> Start Camera Scan
-                            </button>
-                            <button id="stopButton" class="btn btn-danger" onclick="stopScanning()" style="display:none;">
-                                <i class="hgi hgi-stop"></i> Stop Scanning
-                            </button>
-                            <button class="btn btn-success" onclick="triggerFileUpload()">
-                                <i class="hgi hgi-upload-01"></i> Upload QR Image
-                            </button>
-                        </div>
-                        
-                        <!-- File Upload Section -->
-                        <div class="upload-section" id="uploadSection">
-                            <i class="hgi hgi-cloud-upload"></i>
-                            <p class="mb-0">Click to upload QR code image</p>
-                            <small class="text-muted">or drag and drop here</small>
-                        </div>
-                        <input type="file" id="fileInput" accept="image/*">
-                        
-                        <!-- Enhanced Scan Result Section -->
-                        <div id="scanResult" style="display: none; margin-top: 20px;">
-                            <div id="qrStatusMessage"></div>
+    <div class="col-lg-8">
+        <div class="card scanner-container">
+            <div class="card-body">
+                <h4 class="card-title text-center mb-4">Scan Student QR Code</h4>
+                
+                <!-- QR Scanner -->
+                <div id="reader"></div>
+                
+                <!-- Scanner Controls -->
+                <div class="text-center mt-3">
+                    <button id="startButton" class="btn btn-primary" onclick="startScanning()">
+                        <i class="hgi hgi-camera-01"></i> Start Camera Scan
+                    </button>
+                    <button id="stopButton" class="btn btn-danger" onclick="stopScanning()" style="display:none;">
+                        <i class="hgi hgi-stop"></i> Stop Scanning
+                    </button>
+                    <button class="btn btn-success" onclick="triggerFileUpload()">
+                        <i class="hgi hgi-upload-01"></i> Upload QR Image
+                    </button>
+                </div>
+                
+                <!-- File Upload Section -->
+                <div class="upload-section" id="uploadSection">
+                    <i class="hgi hgi-cloud-upload"></i>
+                    <p class="mb-0">Click to upload QR code image</p>
+                    <small class="text-muted">or drag and drop here</small>
+                </div>
+                <input type="file" id="fileInput" accept="image/*">
+                
+                <!-- Enhanced Scan Result Section -->
+                <div id="scanResult" style="display: none; margin-top: 20px;">
+                    <div id="qrStatusMessage"></div>
+                    
+                    <!-- Valid QR Code Details -->
+                    <div id="validQRDetails" style="display: none;">
+                        <div class="student-details-card">
+                            <h5 class="text-center mb-4">Student Leave Details</h5>
                             
-                            <!-- Valid QR Code Details -->
-                            <div id="validQRDetails" style="display: none;">
-                                <div class="student-details-card">
-                                    <h5 class="text-center mb-4">Student Leave Details</h5>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-4 text-center">
-                                            <div class="student-photo-placeholder">
-                                                <i class="hgi hgi-user-circle"></i>
-                                            </div>
-                                            <h6 class="mt-3" id="studentNameLarge"></h6>
-                                            <span class="badge bg-primary" id="studentIdBadge"></span>
-                                        </div>
-                                        
-                                        <div class="col-md-8">
-                                            <div class="detail-row">
-                                                <span class="detail-label">Leave ID:</span>
-                                                <span class="detail-value" id="leaveId"></span>
-                                            </div>
-                                            
-                                            <div class="detail-row">
-                                                <span class="detail-label">Student Name:</span>
-                                                <span class="detail-value" id="studentNameDetail"></span>
-                                            </div>
-                                            
-                                            <div class="detail-row">
-                                                <span class="detail-label">Contact:</span>
-                                                <span class="detail-value" id="studentContact"></span>
-                                            </div>
-                                            
-                                            <div class="detail-row">
-                                                <span class="detail-label">Leave Duration:</span>
-                                                <span class="detail-value" id="leaveDurationDetail"></span>
-                                            </div>
-                                            
-                                            <div class="detail-row">
-                                                <span class="detail-label">Days:</span>
-                                                <span class="detail-value" id="leaveDays"></span>
-                                            </div>
-                                            
-                                            <div class="detail-row">
-                                                <span class="detail-label">Scan Type:</span>
-                                                <span class="detail-value">
-                                                    <span id="scanTypeBadge" class="badge"></span>
-                                                </span>
-                                            </div>
-                                            
-                                            <div class="detail-row">
-                                                <span class="detail-label">Scan Time:</span>
-                                                <span class="detail-value" id="scanTimeDetail"></span>
-                                            </div>
-                                            
-                                            <div class="detail-row">
-                                                <span class="detail-label">Gate:</span>
-                                                <span class="detail-value">Main Gate</span>
-                                            </div>
-                                        </div>
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <div class="student-photo-placeholder">
+                                        <i class="hgi hgi-user-circle"></i>
+                                    </div>
+                                    <h6 class="mt-3" id="studentNameLarge"></h6>
+                                    <span class="badge bg-primary" id="studentIdBadge"></span>
+                                </div>
+                                
+                                <div class="col-md-8">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Leave ID:</span>
+                                        <span class="detail-value" id="leaveId"></span>
                                     </div>
                                     
-                                    <div class="mt-3 text-center">
-                                        <button class="btn btn-success" onclick="confirmScan()">
-                                            <i class="fas fa-check"></i> Confirm & Allow
-                                        </button>
-                                        <button class="btn btn-secondary ms-2" onclick="resetScanner()">
-                                            <i class="hgi hgi-refresh"></i> Scan Another
-                                        </button>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Student Name:</span>
+                                        <span class="detail-value" id="studentNameDetail"></span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Contact:</span>
+                                        <span class="detail-value" id="studentContact"></span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Leave Duration:</span>
+                                        <span class="detail-value" id="leaveDurationDetail"></span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Days:</span>
+                                        <span class="detail-value" id="leaveDays"></span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Scan Type:</span>
+                                        <span class="detail-value">
+                                            <span id="scanTypeBadge" class="badge"></span>
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Scan Time:</span>
+                                        <span class="detail-value" id="scanTimeDetail"></span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">Gate:</span>
+                                        <span class="detail-value">Main Gate</span>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Invalid QR Code Message -->
-                            <div id="invalidQRDetails" style="display: none;">
-                                <div class="text-center">
-                                    <i class="hgi hgi-alert-circle"></i>
-                                    <h5>Invalid QR Code</h5>
-                                    <p id="errorMessage" class="text-muted"></p>
-                                    <button class="btn btn-primary mt-3" onclick="resetScanner()">
-                                        <i class="hgi hgi-refresh"></i> Try Again
-                                    </button>
-                                </div>
+                            <div class="mt-3 text-center">
+                                <button class="btn btn-success" onclick="confirmScan()">
+                                    <i class="hgi hgi-checkmark-01"></i> Confirm & Allow
+                                </button>
+                                <button class="btn btn-secondary ms-2" onclick="resetScanner()">
+                                    <i class="hgi hgi-refresh"></i> Scan Another
+                                </button>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Invalid QR Code Message -->
+                    <div id="invalidQRDetails" style="display: none;">
+                        <div class="text-center">
+                            <i class="hgi hgi-alert-circle"></i>
+                            <h5>Invalid QR Code</h5>
+                            <p id="errorMessage" class="text-muted"></p>
+                            <button class="btn btn-primary mt-3" onclick="resetScanner()">
+                                <i class="hgi hgi-refresh"></i> Try Again
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-4">
-                <!-- Today's Statistics -->
-                <div class="card mb-3">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Today's Statistics</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Total Scans:</span>
-                            <strong id="totalScans">0</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Exits:</span>
-                            <strong id="totalExits" class="text-danger">0</strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span>Entries:</span>
-                            <strong id="totalEntries" class="text-success">0</strong>
-                        </div>
-                    </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Today's Statistics -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Today's Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Scans:</span>
+                    <strong id="totalScans">0</strong>
                 </div>
-                
-                <!-- Recent Scans -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Recent Scans</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                        <div id="recentScans">
-                            <p class="text-muted text-center">No scans yet today</p>
-                        </div>
-                    </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Exits:</span>
+                    <strong id="totalExits" class="text-danger">0</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Entries:</span>
+                    <strong id="totalEntries" class="text-success">0</strong>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Scans -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Scans</h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                <div id="recentScans">
+                    <p class="text-muted text-center">No scans yet today</p>
                 </div>
             </div>
         </div>

@@ -9,16 +9,19 @@
   </button>
 </div>
 
-<div class="row mb-2">
-  <div class="col-3"><div class="stat-card stat-card-blue"><div class="stat-label">Students</div><div class="stat-value blue">{{ user_stats.students }}</div></div></div>
-  <div class="col-3"><div class="stat-card stat-card-green"><div class="stat-label">Wardens</div><div class="stat-value green">{{ user_stats.wardens }}</div></div></div>
-  <div class="col-3"><div class="stat-card stat-card-red"><div class="stat-label">Admins</div><div class="stat-value red">{{ user_stats.admins }}</div></div></div>
+<div class="stat-grid-2x2">
+  <div><div class="stat-card stat-card-blue"><div class="stat-label">Students</div><div class="stat-value blue">{{ user_stats.students }}</div></div></div>
+  <div><div class="stat-card stat-card-green"><div class="stat-label">Wardens</div><div class="stat-value green">{{ user_stats.wardens }}</div></div></div>
+  <div><div class="stat-card stat-card-red"><div class="stat-label">Admins</div><div class="stat-value red">{{ user_stats.admins }}</div></div></div>
 </div>
 
 <div class="card">
-  <div class="card-header">
+  <div class="card-header flex-between">
     <span class="card-title">All Users</span>
-    <input type="text" class="form-control" id="searchInput" placeholder="Search users…" style="max-width:220px;" onkeyup="searchUsers()">
+    <div class="flex gap-2">
+      <input type="text" class="form-control" id="searchInput" placeholder="Search users…" style="max-width:180px;" onkeyup="searchUsers()">
+      <button class="btn btn-sm btn-success" onclick="exportUsers()"><i class="hgi hgi-file-export"></i>Export</button>
+    </div>
   </div>
   <div class="table-wrap">
     <table class="table" id="usersTable">
@@ -42,17 +45,19 @@
             {% else %}<span class="badge badge-secondary">Inactive</span>{% endif %}
           </td>
           <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
-          <td class="flex gap-1">
+          <td><div class="action-table">
+            {% set action_label = 'Deactivate' if user.is_active else 'Activate' %}
             <a href="{{ url_for('admin.toggle_user', user_id=user.id) }}"
                class="btn btn-sm {{ 'btn-danger' if user.is_active else 'btn-success' }}"
-               onclick="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} this user?')">
-              <i class="hgi hgi-{{ 'cancel-01' if user.is_active else 'checkmark-01' }}"></i>
+               onclick="return confirm('{{ action_label }} this user?')">
+              <i class="hgi hgi-{{ 'cancel-01' if user.is_active else 'checkmark-01' }}"></i><span>{{ action_label }}</span>
             </a>
             {% if user.id != current_user.id %}
-            <button class="btn btn-sm btn-danger" onclick="deleteUser({{ user.id }})">
-              <i class="hgi hgi-delete-01"></i>
+            <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user.id }}')">
+              <i class="hgi hgi-delete-01"></i><span>Delete</span>
             </button>
             {% endif %}
+          </div>
           </td>
         </tr>
         {% endfor %}
@@ -101,6 +106,9 @@ function searchUsers() {
 }
 function deleteUser(id) {
   if (confirm('Permanently delete this user?')) window.location.href = `/admin/users/delete/${id}`;
+}
+function exportUsers() {
+  exportTableToCSV('usersTable', 'user_records.csv');
 }
 </script>
 {% endblock %}

@@ -1,148 +1,136 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-3">
-        {% include 'components/sidebar.html' %}
+<h2 class="mb-4">Attendance Records</h2>
+
+<!-- Statistics Cards -->
+<div class="stat-grid-2x2">
+    <div>
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Today's Exits</h6>
+                <h3>{{ today_exits|default(0) }}</h3>
+            </div>
+        </div>
     </div>
-    
-    <div class="col-md-9">
-        <h2 class="mb-4">Attendance Records</h2>
-        
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card bg-primary text-white">
-                    <div class="card-body">
-                        <h6>Today's Exits</h6>
-                        <h3>{{ today_exits|default(0) }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-success text-white">
-                    <div class="card-body">
-                        <h6>Today's Entries</h6>
-                        <h3>{{ today_entries|default(0) }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-warning text-white">
-                    <div class="card-body">
-                        <h6>Currently Out</h6>
-                        <h3>{{ currently_out|default(0) }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-info text-white">
-                    <div class="card-body">
-                        <h6>On Leave Today</h6>
-                        <h3>{{ on_leave_today|default(0) }}</h3>
-                    </div>
-                </div>
+    <div>
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>Today's Entries</h6>
+                <h3>{{ today_entries|default(0) }}</h3>
             </div>
         </div>
-        
-        <!-- Filter Section -->
-        <div class="card mb-4">
+    </div>
+    <div>
+        <div class="card bg-warning text-white">
             <div class="card-body">
-                <form method="GET" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Date</label>
-                        <input type="date" name="date" class="form-control" value="{{ request.args.get('date', '') }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Type</label>
-                        <select name="type" class="form-select">
-                            <option value="">All</option>
-                            <option value="exit">Exit</option>
-                            <option value="entry">Entry</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Student Name</label>
-                        <input type="text" name="student" class="form-control" placeholder="Search student">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary d-block">Filter</button>
-                    </div>
-                </form>
+                <h6>Currently Out</h6>
+                <h3>{{ currently_out|default(0) }}</h3>
             </div>
         </div>
-        
-        <!-- Attendance Table -->
-        <div class="card">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Attendance Records</h5>
-                    <button class="btn btn-sm btn-success" onclick="exportToExcel()">
-                        <i class="hgi hgi-file-export"></i> Export
-                    </button>
-                </div>
-            </div>
+    </div>
+    <div>
+        <div class="card bg-info text-white">
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="attendanceTable">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>Student</th>
-                                <th>Room No</th>
-                                <th>Type</th>
-                                <th>Leave ID</th>
-                                <th>Scanned By</th>
-                                <th>Location</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for record in records %}
-                            <tr>
-                                <td>{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                <td>{{ record.student.name }}</td>
-                                <td>{{ record.student.room_no|default('N/A') }}</td>
-                                <td>
-                                    {% if record.scan_type == 'exit' %}
-                                        <span class="badge bg-danger">Exit</span>
-                                    {% else %}
-                                        <span class="badge bg-success">Entry</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ record.leave_id }}</td>
-                                <td>{{ record.scanner.name }}</td>
-                                <td>{{ record.location }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination -->
-                {% if records %}
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item {% if not records.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="?page={{ records.prev_num }}">Previous</a>
-                        </li>
-                        {% for page_num in records.iter_pages() %}
-                            {% if page_num %}
-                                <li class="page-item {% if page_num == records.page %}active{% endif %}">
-                                    <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
-                                </li>
+                <h6>On Leave Today</h6>
+                <h3>{{ on_leave_today|default(0) }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ request.args.get('date', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Type</label>
+                <select name="type" class="form-select">
+                    <option value="">All</option>
+                    <option value="exit">Exit</option>
+                    <option value="entry">Entry</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Student Name</label>
+                <input type="text" name="student" class="form-control" placeholder="Search student">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary d-block">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Attendance Table -->
+<div class="card">
+    <div class="card-header flex-between">
+        <h5 class="card-title">Attendance Records</h5>
+        <button class="btn btn-sm btn-success" onclick="exportToExcel()"><i class="hgi hgi-file-export"></i>Export</button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Student</th>
+                        <th>Room No</th>
+                        <th>Type</th>
+                        <th>Leave ID</th>
+                        <th>Scanned By</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ record.student.name }}</td>
+                        <td>{{ record.student.room_no|default('N/A') }}</td>
+                        <td>
+                            {% if record.scan_type == 'exit' %}
+                                <span class="badge bg-danger">Exit</span>
                             {% else %}
-                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                                <span class="badge bg-success">Entry</span>
                             {% endif %}
-                        {% endfor %}
-                        <li class="page-item {% if not records.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="?page={{ records.next_num }}">Next</a>
-                        </li>
-                    </ul>
-                </nav>
-                {% endif %}
-            </div>
+                        </td>
+                        <td>{{ record.leave_id }}</td>
+                        <td>{{ record.scanner.name }}</td>
+                        <td>{{ record.location }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        
+        <!-- Pagination -->
+        {% if records %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if not records.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="?page={{ records.prev_num }}">Previous</a>
+                </li>
+                {% for page_num in records.iter_pages() %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == records.page %}active{% endif %}">
+                            <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item {% if not records.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="?page={{ records.next_num }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
     </div>
 </div>
 

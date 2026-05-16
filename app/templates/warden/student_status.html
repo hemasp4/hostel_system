@@ -3,264 +3,223 @@
 {% block title %}Student Status - Hostel Management{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-3">
-        {% include 'components/sidebar.html' %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" style="margin:0;">Student Presence Status</h1>
+    <div class="text-muted text-sm">{{ today.strftime('%B %d, %Y') }}</div>
+  </div>
+</div>
+
+<div class="stat-grid-2x2">
+  <div>
+    <div class="stat-card stat-card-green">
+      <div class="stat-label">Present</div>
+      <div class="stat-value green">{{ stats.present_in_hostel }}</div>
+      <div class="text-muted text-sm">Currently inside</div>
     </div>
-    
-    <div class="col-md-9">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Student Presence Status</h2>
-            <span class="text-muted">{{ today.strftime('%B %d, %Y') }}</span>
-        </div>
-        
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card bg-success text-white">
-                    <div class="card-body">
-                        <h6>Present in Hostel</h6>
-                        <h3>{{ stats.present_in_hostel }}</h3>
-                        <small>Currently inside</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-info text-white">
-                    <div class="card-body">
-                        <h6>On Approved Leave</h6>
-                        <h3>{{ stats.on_approved_leave }}</h3>
-                        <small>Valid leave today</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-warning text-white">
-                    <div class="card-body">
-                        <h6>Outside Hostel</h6>
-                        <h3>{{ stats.outside_hostel }}</h3>
-                        <small>Not in hostel</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-danger text-white">
-                    <div class="card-body">
-                        <h6>Absent (No Leave)</h6>
-                        <h3>{{ stats.outside_without_leave }}</h3>
-                        <small>Outside without permission</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Filters -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Filter by Status</label>
-                        <select class="form-select" id="statusFilter" onchange="filterTable()">
-                            <option value="">All Students</option>
-                            <option value="inside">Present in Hostel</option>
-                            <option value="on_leave_outside">On Leave (Outside)</option>
-                            <option value="on_leave_inside">On Leave (Inside)</option>
-                            <option value="outside_no_leave">Absent Without Leave</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Search Student</label>
-                        <input type="text" class="form-control" id="searchInput" 
-                               placeholder="Name or ID..." onkeyup="filterTable()">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Actions</label>
-                        <div>
-                            <button class="btn btn-success" onclick="exportToExcel()">
-                                <i class="hgi hgi-file-export"></i> Export
-                            </button>
-                            <button class="btn btn-primary" onclick="window.print()">
-                                <i class="hgi hgi-printer"></i> Print
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Student Status Table -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Student Status Details</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="studentStatusTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Room</th>
-                                <th>Status</th>
-                                <th>Leave Details</th>
-                                <th>Last Scan</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in student_statuses %}
-                            <tr data-status="{{ item.status }}">
-                                <td>{{ item.student.id }}</td>
-                                <td>
-                                    <strong>{{ item.student.name }}</strong><br>
-                                    <small class="text-muted">{{ item.student.email }}</small>
-                                </td>
-                                <td>{{ item.student.room_no|default('N/A') }}</td>
-                                <td>
-                                    {% if item.status == 'inside' %}
-                                        <span class="badge bg-success">
-                                            <i class="hgi hgi-checkmark-01"></i> Present
-                                        </span>
-                                    {% elif item.status == 'on_leave_outside' %}
-                                        <span class="badge bg-info">
-                                            <i class="hgi hgi-calendar-check-in"></i> On Leave (Out)
-                                        </span>
-                                    {% elif item.status == 'on_leave_inside' %}
-                                        <span class="badge bg-primary">
-                                            <i class="hgi hgi-home-01"></i> On Leave (In)
-                                        </span>
-                                    {% elif item.status == 'outside_no_leave' %}
-                                        <span class="badge bg-danger">
-                                            <i class="hgi hgi-alert-01"></i> Absent
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Unknown</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.active_leave %}
-                                        <small>
-                                            {{ item.active_leave.start_date }} to {{ item.active_leave.end_date }}<br>
-                                            <em>{{ item.active_leave.reason[:30] }}...</em>
-                                        </small>
-                                    {% else %}
-                                        <span class="text-muted">No active leave</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.last_scan %}
-                                        <small>
-                                            {{ item.last_scan.timestamp.strftime('%I:%M %p') }}<br>
-                                            <span class="badge bg-{{ 'danger' if item.last_scan.scan_type == 'exit' else 'success' }}">
-                                                {{ item.last_scan.scan_type|upper }}
-                                            </span>
-                                        </small>
-                                    {% else %}
-                                        <span class="text-muted">No scan today</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info" 
-                                            onclick="viewStudentDetails({{ item.student.id }})">
-                                        <i class="hgi hgi-eye"></i>
-                                    </button>
-                                    {% if item.status == 'outside_no_leave' %}
-                                        <button class="btn btn-sm btn-warning" 
-                                                onclick="sendAlert({{ item.student.id }})">
-                                            <i class="hgi hgi-notification-01"></i>
-                                        </button>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+  </div>
+  <div>
+    <div class="stat-card stat-card-blue">
+      <div class="stat-label">Approved Leave</div>
+      <div class="stat-value blue">{{ stats.on_approved_leave }}</div>
+      <div class="text-muted text-sm">Valid leave today</div>
     </div>
+  </div>
+  <div>
+    <div class="stat-card stat-card-yellow">
+      <div class="stat-label">Outside Hostel</div>
+      <div class="stat-value yellow">{{ stats.outside_hostel }}</div>
+      <div class="text-muted text-sm">Not in hostel</div>
+    </div>
+  </div>
+  <div>
+    <div class="stat-card stat-card-red">
+      <div class="stat-label">Absent</div>
+      <div class="stat-value red">{{ stats.outside_without_leave }}</div>
+      <div class="text-muted text-sm">Without permission</div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-2 dashboard-filter-card">
+  <div class="card-body">
+    <div class="form-row dashboard-filter-grid">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Filter by Status</label>
+        <select class="form-select" id="statusFilter" onchange="filterTable()">
+          <option value="">All Students</option>
+          <option value="inside">Present in Hostel</option>
+          <option value="on_leave_outside">On Leave (Outside)</option>
+          <option value="on_leave_inside">On Leave (Inside)</option>
+          <option value="outside_no_leave">Absent Without Leave</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Search Student</label>
+        <input type="text" class="form-control" id="searchInput" placeholder="Name or ID..." onkeyup="filterTable()">
+      </div>
+      <div class="form-group dashboard-actions-field" style="margin:0;">
+        <label class="form-label">Actions</label>
+        <div class="action-group dashboard-actions">
+          <button class="btn btn-success" onclick="exportToExcel()"><i class="hgi hgi-file-export"></i>Export</button>
+          <button class="btn btn-primary" onclick="window.print()"><i class="hgi hgi-printer"></i>Print</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Student Status Details</span>
+  </div>
+  <div class="table-wrap">
+    <table class="table" id="studentStatusTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Room</th>
+          <th>Status</th>
+          <th>Leave Details</th>
+          <th>Last Scan</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in student_statuses %}
+        <tr data-status="{{ item.status }}">
+          <td>{{ item.student.id }}</td>
+          <td>
+            <span class="fw-600">{{ item.student.name }}</span><br>
+            <span class="text-muted text-sm">{{ item.student.email }}</span>
+          </td>
+          <td>{{ item.student.room_no|default('N/A') }}</td>
+          <td>
+            {% if item.status == 'inside' %}
+              <span class="badge badge-success"><i class="hgi hgi-checkmark-01"></i> Present</span>
+            {% elif item.status == 'on_leave_outside' %}
+              <span class="badge badge-primary"><i class="hgi hgi-calendar-check-in"></i> On Leave</span>
+            {% elif item.status == 'on_leave_inside' %}
+              <span class="badge badge-primary"><i class="hgi hgi-home-01"></i> Leave In</span>
+            {% elif item.status == 'outside_no_leave' %}
+              <span class="badge badge-danger"><i class="hgi hgi-alert-01"></i> Absent</span>
+            {% else %}
+              <span class="badge badge-secondary">Unknown</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.active_leave %}
+              <span class="text-sm">{{ item.active_leave.start_date }} to {{ item.active_leave.end_date }}</span><br>
+              <span class="text-muted text-sm">{{ item.active_leave.reason[:30] }}{% if item.active_leave.reason|length > 30 %}...{% endif %}</span>
+            {% else %}
+              <span class="text-muted">No active leave</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.last_scan %}
+              <span class="text-sm">{{ item.last_scan.timestamp.strftime('%I:%M %p') }}</span><br>
+              <span class="badge {{ 'badge-danger' if item.last_scan.scan_type == 'exit' else 'badge-success' }}">{{ item.last_scan.scan_type|upper }}</span>
+            {% else %}
+              <span class="text-muted">No scan today</span>
+            {% endif %}
+          </td>
+          <td class="actions-cell">
+            <div class="action-table">
+              <button class="btn btn-sm btn-info" onclick="viewStudentDetails('{{ item.student.id }}')">
+                <i class="hgi hgi-eye"></i><span>View</span>
+              </button>
+              {% if item.status == 'outside_no_leave' %}
+                <button class="btn btn-sm btn-warning" onclick="sendAlert('{{ item.student.id }}')">
+                  <i class="hgi hgi-notification-01"></i><span>Alert</span>
+                </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state">No student status records found.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal-overlay" id="studentDetailsModal">
+  <div class="modal-box modal-box-lg">
+    <div class="modal-header">
+      <span class="modal-title">Student Details</span>
+      <button class="modal-close" onclick="closeModal('studentDetailsModal')">×</button>
+    </div>
+    <div class="modal-body" id="studentDetailsContent"></div>
+  </div>
 </div>
 
 <script>
 function filterTable() {
-    const statusFilter = document.getElementById('statusFilter').value;
-    const searchInput = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.querySelectorAll('#studentStatusTable tbody tr');
-    
-    rows.forEach(row => {
-        const status = row.getAttribute('data-status');
-        const text = row.textContent.toLowerCase();
-        
-        const statusMatch = !statusFilter || status === statusFilter;
-        const searchMatch = !searchInput || text.includes(searchInput);
-        
-        row.style.display = statusMatch && searchMatch ? '' : 'none';
-    });
+  const statusFilter = document.getElementById('statusFilter').value;
+  const searchInput = document.getElementById('searchInput').value.toLowerCase();
+  const rows = document.querySelectorAll('#studentStatusTable tbody tr');
+
+  rows.forEach(row => {
+    const status = row.getAttribute('data-status');
+    const text = row.textContent.toLowerCase();
+    const statusMatch = !statusFilter || status === statusFilter;
+    const searchMatch = !searchInput || text.includes(searchInput);
+    row.style.display = statusMatch && searchMatch ? '' : 'none';
+  });
 }
 
-function viewStudentDetails(studentId) {
-    // Implement student details view
-    window.location.href = `/warden/student/${studentId}/details`;
+function viewStudentDetails(id) {
+  fetch(`/warden/student/${id}/details`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('studentDetailsContent').innerHTML = `
+        <div class="modal-detail-grid">
+          <div>
+            <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--blue); padding:1.25rem; width:100%; height:100%;">
+              <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--blue); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
+                <i class="hgi hgi-user"></i>Personal Info
+              </h4>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block">Full Name</span><div class="fw-700" style="font-size:0.95rem;">${data.name}</div></div>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block">Email</span><div class="text-sm" style="word-break:break-all;">${data.email}</div></div>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block">Phone</span><div class="text-sm">${data.phone}</div></div>
+              <div><span class="text-muted text-sm uppercase fw-600 d-block">Room</span><div class="text-sm">${data.room_no||'Not Assigned'}</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--green); padding:1.25rem; width:100%; height:100%;">
+              <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--green); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
+                <i class="hgi hgi-calendar-01"></i>Leave Stats
+              </h4>
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.25rem; width:100%; text-align:center; margin-top:0.5rem;">
+                <div style="padding:0.4rem 0;"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Total</span><div class="fw-800" style="font-size:1.25rem;">${data.total_leaves}</div></div>
+                <div style="padding:0.4rem 0;"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Approved</span><div class="fw-800 text-success" style="font-size:1.25rem;">${data.approved_leaves}</div></div>
+                <div style="padding:0.4rem 0;"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Rejected</span><div class="fw-800 text-danger" style="font-size:1.25rem;">${data.rejected_leaves}</div></div>
+                <div style="padding:0.4rem 0;"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Pending</span><div class="fw-800 text-warning" style="font-size:1.25rem;">${data.pending_leaves}</div></div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      openModal('studentDetailsModal');
+    });
 }
 
 function sendAlert(studentId) {
-    if (confirm('Send absence notification to this student?')) {
-        // Implement notification sending
-        fetch(`/warden/notify-absent/${studentId}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token() }}'
-            }
-        }).then(response => {
-            if (response.ok) {
-                alert('Notification sent successfully');
-            }
-        });
-    }
+  if (confirm('Send absence notification to this student?')) {
+    fetch(`/warden/notify-absent/${studentId}`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+    }).then(response => {
+      if (response.ok) alert('Notification sent successfully');
+    });
+  }
 }
 
 function exportToExcel() {
-    // Simple CSV export
-    const table = document.getElementById('studentStatusTable');
-    let csv = [];
-    
-    // Headers
-    const headers = [];
-    table.querySelectorAll('thead th').forEach(th => {
-        headers.push(th.textContent.trim());
-    });
-    csv.push(headers.join(','));
-    
-    // Data
-    table.querySelectorAll('tbody tr').forEach(tr => {
-        if (tr.style.display !== 'none') {
-            const row = [];
-            tr.querySelectorAll('td').forEach(td => {
-                row.push('"' + td.textContent.trim().replace(/\n/g, ' ') + '"');
-            });
-            csv.push(row.join(','));
-        }
-    });
-    
-    // Download
-    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `student_status_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+  exportTableToCSV('studentStatusTable', `student_status_${new Date().toISOString().split('T')[0]}.csv`);
 }
 </script>
-
-<style>
-@media print {
-    .col-md-3, .btn, .form-select, .form-control {
-        display: none !important;
-    }
-    .col-md-9 {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-}
-</style>
 {% endblock %}

@@ -149,13 +149,13 @@
         <div class="col-12">
             <div class="print-actions no-print">
                 <button class="print-btn" onclick="window.print()">
-                    <i class="fas fa-print"></i> Print Leave Pass
+                    <i class="hgi hgi-printer"></i> Print Leave Pass
                 </button>
                 <button class="print-btn secondary" onclick="downloadPDF()">
-                    <i class="fas fa-file-pdf"></i> Download PDF
+                    <i class="hgi hgi-file-pdf"></i> Download PDF
                 </button>
                 <a href="{{ url_for('leave.history') }}" class="print-btn secondary" style="text-decoration: none;">
-                    <i class="fas fa-arrow-left"></i> Back to History
+                    <i class="hgi hgi-arrow-left-01"></i> Back to History
                 </a>
             </div>
             
@@ -226,7 +226,7 @@
                 {% endif %}
                 
                 <div class="instructions">
-                    <h5><i class="fas fa-exclamation-circle"></i> Important Instructions:</h5>
+                    <h5><i class="hgi hgi-alert-circle"></i> Important Instructions:</h5>
                     <ul class="mb-0">
                         <li>This pass must be presented at the gate during exit and entry</li>
                         <li>Student must return on or before <strong>{{ leave.end_date.strftime('%B %d, %Y') }}</strong></li>

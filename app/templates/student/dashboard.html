@@ -9,15 +9,13 @@
   {% if leave.status == 'approved' and leave.qr_code and leave.is_active() %}
   <div class="alert alert-success">
     <i class="hgi hgi-checkmark-circle-01"></i>
-    <div>
-      <strong>Active Leave Pass</strong> — Your leave from {{ leave.start_date }} to {{ leave.end_date }} is approved!
+    <div style="flex: 1;">
+      <strong>Active Leave Pass</strong><br>
+      <span class="text-sm">Your leave from {{ leave.start_date }} to {{ leave.end_date }} is approved!</span>
     </div>
-    <div class="flex gap-1" style="margin-left:auto;">
+    <div class="action-group" style="margin-left: auto;">
       <button class="btn btn-sm btn-success" onclick="showQR('{{ leave.qr_code }}', '{{ leave.id }}', '{{ leave.student.name }}')">
         <i class="hgi hgi-qr-code"></i> Show QR
-      </button>
-      <button class="btn btn-sm btn-secondary" onclick="downloadQR('{{ leave.qr_code }}', '{{ leave.id }}')">
-        <i class="hgi hgi-download-01"></i> Download
       </button>
       <a href="{{ url_for('leave.print_leave', leave_id=leave.id) }}" class="btn btn-sm btn-outline">
         <i class="hgi hgi-printer"></i> Print
@@ -29,21 +27,24 @@
 {% endfor %}
 
 <!-- Stats -->
-<div class="row mb-2">
-  <div class="col-4">
+<div class="stat-grid-2x2">
+  <div>
     <div class="stat-card stat-card-blue">
+      <i class="hgi hgi-calendar-check-in stat-icon" style="color: var(--blue);"></i>
       <div class="stat-label">Total Leaves</div>
       <div class="stat-value blue">{{ total_leaves }}</div>
     </div>
   </div>
-  <div class="col-4">
+  <div>
     <div class="stat-card stat-card-green">
+      <i class="hgi hgi-checkmark-circle-01 stat-icon" style="color: var(--green);"></i>
       <div class="stat-label">Approved</div>
       <div class="stat-value green">{{ approved_leaves }}</div>
     </div>
   </div>
-  <div class="col-4">
+  <div>
     <div class="stat-card stat-card-yellow">
+      <i class="hgi hgi-time-quarter-past stat-icon" style="color: var(--yellow);"></i>
       <div class="stat-label">Pending</div>
       <div class="stat-value yellow">{{ recent_leaves|selectattr('status','equalto','pending')|list|length }}</div>
     </div>
@@ -51,37 +52,50 @@
 </div>
 
 <!-- Quick Actions -->
-<div class="card mb-2">
+<div class="card mb-3">
   <div class="card-header"><span class="card-title">Quick Actions</span></div>
-  <div class="card-body flex gap-1">
-    <a href="{{ url_for('leave.request_leave') }}" class="btn btn-primary">
-      <i class="hgi hgi-add-square"></i> New Leave Request
-    </a>
-    <a href="{{ url_for('leave.history') }}" class="btn btn-secondary">
-      <i class="hgi hgi-clock-01"></i> Leave History
-    </a>
-    <a href="{{ url_for('student.profile') }}" class="btn btn-outline">
-      <i class="hgi hgi-user-circle"></i> My Profile
-    </a>
+  <div class="card-body">
+    <div class="action-group">
+      <a href="{{ url_for('leave.request_leave') }}" class="btn btn-primary">
+        <i class="hgi hgi-add-square"></i> Request New Leave
+      </a>
+      <a href="{{ url_for('leave.history') }}" class="btn btn-secondary">
+        <i class="hgi hgi-clock-01"></i> View History
+      </a>
+      <a href="{{ url_for('student.profile') }}" class="btn btn-outline">
+        <i class="hgi hgi-user-circle"></i> Update Profile
+      </a>
+    </div>
   </div>
 </div>
 
 <!-- Recent Leaves -->
 <div class="card">
-  <div class="card-header"><span class="card-title">Recent Leave Requests</span></div>
+  <div class="card-header flex-between">
+    <span class="card-title">My Recent Leave Requests</span>
+    <a href="{{ url_for('leave.history') }}" class="text-sm fw-600">View History</a>
+  </div>
   <div class="table-wrap">
     <table class="table">
       <thead>
         <tr>
-          <th>Requested</th><th>Leave Period</th><th>Reason</th><th>Status</th><th>Actions</th>
+          <th>Requested At</th>
+          <th>Leave Period</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th class="text-center">QR Pass</th>
         </tr>
       </thead>
       <tbody>
         {% for leave in recent_leaves %}
         <tr>
-          <td>{{ leave.requested_at.strftime('%d %b %Y') }}</td>
-          <td>{{ leave.start_date }} → {{ leave.end_date }}</td>
-          <td>{{ leave.reason[:40] }}{% if leave.reason|length > 40 %}…{% endif %}</td>
+          <td class="text-sm">{{ leave.requested_at.strftime('%d %b, %Y') }}</td>
+          <td>
+            <span class="fw-600 text-sm">{{ leave.start_date }} → {{ leave.end_date }}</span>
+          </td>
+          <td style="max-width: 200px;">
+            <span class="text-sm">{{ leave.reason[:40] }}{% if leave.reason|length > 40 %}...{% endif %}</span>
+          </td>
           <td>
             {% if leave.status == 'pending' %}
               <span class="badge badge-warning">Pending</span>
@@ -93,19 +107,20 @@
               <span class="badge badge-danger">Rejected</span>
             {% endif %}
           </td>
-          <td class="flex gap-1">
-            {% if leave.status == 'approved' and leave.qr_code %}
-              <button class="btn btn-sm btn-primary" onclick="showQR('{{ leave.qr_code }}', '{{ leave.id }}', '{{ leave.student.name }}')">
-                <i class="hgi hgi-qr-code"></i>
-              </button>
-              <button class="btn btn-sm btn-success" onclick="downloadQR('{{ leave.qr_code }}', '{{ leave.id }}')">
-                <i class="hgi hgi-download-01"></i>
-              </button>
-            {% endif %}
+          <td>
+            <div class="action-group" style="justify-content: center;">
+              {% if leave.status == 'approved' and leave.qr_code %}
+                <button class="btn btn-sm btn-info" onclick="showQR('{{ leave.qr_code }}', '{{ leave.id }}', '{{ leave.student.name }}')">
+                  <i class="hgi hgi-qr-code"></i> View QR
+                </button>
+              {% else %}
+                <span class="text-muted text-sm">—</span>
+              {% endif %}
+            </div>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="empty-state">No leave requests yet.</td></tr>
+        <tr><td colspan="5" class="empty-state">You haven't requested any leaves yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>

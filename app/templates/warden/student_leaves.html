@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Leave History — {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" style="margin:0;">Leave History</h1>
+    <div class="text-muted text-sm">{{ student.name }} (ID: {{ student.id }})</div>
+  </div>
+  <a href="{{ url_for('warden.students_list') }}" class="btn btn-secondary">
+    <i class="hgi hgi-arrow-left-01"></i>Back to List
+  </a>
+</div>
+
+<div class="stat-grid-2x2">
+  <div>
+    <div class="stat-card stat-card-blue">
+      <i class="hgi hgi-calendar-check-in stat-icon" style="color: var(--blue);"></i>
+      <div class="stat-label">Total Requests</div>
+      <div class="stat-value blue">{{ leaves|length }}</div>
+    </div>
+  </div>
+  <div>
+    <div class="stat-card stat-card-green">
+      <i class="hgi hgi-checkmark-circle-01 stat-icon" style="color: var(--green);"></i>
+      <div class="stat-label">Approved</div>
+      <div class="stat-value green">{{ leaves|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+    </div>
+  </div>
+  <div>
+    <div class="stat-card stat-card-yellow">
+      <i class="hgi hgi-time-quarter-past stat-icon" style="color: var(--yellow);"></i>
+      <div class="stat-label">Pending</div>
+      <div class="stat-value yellow">{{ leaves|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+    </div>
+  </div>
+  <div>
+    <div class="stat-card stat-card-red">
+      <i class="hgi hgi-cancel-circle stat-icon" style="color: var(--red);"></i>
+      <div class="stat-label">Rejected</div>
+      <div class="stat-value red">{{ leaves|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header flex-between">
+    <span class="card-title">Detailed Records</span>
+    <button class="btn btn-sm btn-success" onclick="exportTableToCSV('leavesTable', 'leave_history_{{ student.id }}.csv')">
+      <i class="hgi hgi-file-export"></i> Export CSV
+    </button>
+  </div>
+  <div class="table-wrap">
+    <table class="table" id="leavesTable">
+      <thead>
+        <tr>
+          <th>Leave ID</th>
+          <th>Period</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Applied On</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in leaves %}
+        <tr>
+          <td>#{{ leave.id }}</td>
+          <td>
+            <span class="fw-600">{{ leave.start_date }}</span><br>
+            <span class="text-muted text-sm">to {{ leave.end_date }}</span>
+          </td>
+          <td style="max-width: 300px;">{{ leave.reason }}</td>
+          <td>
+            {% if leave.status == 'approved' %}
+              <span class="badge badge-success"><i class="hgi hgi-checkmark-01"></i> Approved</span>
+            {% elif leave.status == 'rejected' %}
+              <span class="badge badge-danger"><i class="hgi hgi-cancel-01"></i> Rejected</span>
+            {% else %}
+              <span class="badge badge-warning"><i class="hgi hgi-clock-01"></i> Pending</span>
+            {% endif %}
+          </td>
+          <td class="text-muted text-sm">{{ leave.requested_at.strftime('%d %b, %Y') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state">No leave records found for this student.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

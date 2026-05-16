@@ -123,25 +123,56 @@ function setupLiveSearch(inputId, tableId) {
     }
 }
 
-// Export table to CSV
+// Export table to CSV with professional cleaning and formatting
 function exportTableToCSV(tableId, filename) {
     const table = document.getElementById(tableId);
+    if (!table) return;
+
     let csv = [];
-    
-    for (let i = 0; i < table.rows.length; i++) {
+    const rows = table.querySelectorAll('tr');
+
+    for (let i = 0; i < rows.length; i++) {
         let row = [];
-        for (let j = 0; j < table.rows[i].cells.length; j++) {
-            row.push(table.rows[i].cells[j].innerText);
+        const cells = rows[i].querySelectorAll('th, td');
+        
+        for (let j = 0; j < cells.length; j++) {
+            // Skip "Actions" column
+            const headerText = table.rows[0].cells[j].innerText.toUpperCase();
+            if (headerText.includes('ACTIONS')) continue;
+
+            let data = cells[j].innerText;
+
+            // 1. Clean data: Remove extra whitespace, newlines, and non-breaking spaces
+            data = data.replace(/\r?\n|\r/g, ' ').trim();
+            data = data.replace(/\s+/g, ' ');
+
+            // 2. Escape special characters like long dashes (—) and quotes
+            data = data.replace(/—/g, '-'); // Replace EM DASH with simple dash
+            data = data.replace(/"/g, '""'); // Escape double quotes for CSV
+
+            // 3. Fix numeric strings (like phone numbers) to prevent scientific notation in Excel
+            // We prepend a single quote or wrap in ="..." to force text format
+            if (/^\d{7,}$/.test(data)) {
+                data = `="${data}"`;
+            } else {
+                data = `"${data}"`;
+            }
+
+            row.push(data);
         }
-        csv.push(row.join(','));
+        if (row.length > 0) {
+            csv.push(row.join(','));
+        }
     }
-    
-    const csvContent = csv.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+
+    const csvContent = "\ufeff" + csv.join('\n'); // Add UTF-8 BOM for Excel
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = filename || 'export.csv';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 }
