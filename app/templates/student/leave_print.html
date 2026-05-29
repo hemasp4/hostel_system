@@ -29,6 +29,7 @@
         margin: 20px auto;
         max-width: 800px;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
     }
     
     .pass-header {
@@ -64,11 +65,13 @@
         font-weight: bold;
         width: 150px;
         color: #555;
+        flex-shrink: 0;
     }
     
     .info-value {
         flex: 1;
         color: #333;
+        word-break: break-word;
     }
     
     .qr-section {
@@ -78,6 +81,8 @@
         border: 2px dashed #ddd;
         background-color: #f9f9f9;
         border-radius: 8px;
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
     
     .qr-section img {
@@ -93,6 +98,8 @@
         padding: 20px;
         background-color: #f8f9fa;
         border-left: 4px solid #007bff;
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
     
     .signature-section {
@@ -100,11 +107,15 @@
         justify-content: space-between;
         margin-top: 50px;
         padding-top: 30px;
+        gap: 1.5rem;
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
     
     .signature-box {
         text-align: center;
-        width: 200px;
+        flex: 1;
+        min-width: 0;
     }
     
     .signature-line {
@@ -114,19 +125,28 @@
     }
     
     .print-actions {
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
         margin: 20px 0;
     }
     
     .print-btn {
         background: #007bff;
         color: white;
-        padding: 10px 30px;
+        padding: 10px 20px;
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        margin: 0 10px;
-        font-size: 16px;
+        font-size: 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.2s;
     }
     
     .print-btn:hover {
@@ -140,6 +160,41 @@
     .print-btn.secondary:hover {
         background: #545b62;
     }
+
+    @media (max-width: 768px) {
+        #printContent {
+            margin: 10px;
+            padding: 15px;
+        }
+        .signature-section {
+            flex-direction: column;
+            gap: 2rem;
+            align-items: center;
+        }
+        .signature-box {
+            width: 100%;
+            max-width: 250px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .print-actions {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0 10px;
+        }
+        .print-btn {
+            width: 100%;
+        }
+        .info-row {
+            flex-direction: column;
+            gap: 4px;
+            padding-bottom: 8px;
+        }
+        .info-label {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -149,13 +204,13 @@
         <div class="col-12">
             <div class="print-actions no-print">
                 <button class="print-btn" onclick="window.print()">
-                    <i class="hgi hgi-printer"></i> Print Leave Pass
+                    <i class="hgi hgi-stroke hgi-printer"></i> Print Leave Pass
                 </button>
                 <button class="print-btn secondary" onclick="downloadPDF()">
-                    <i class="hgi hgi-file-pdf"></i> Download PDF
+                    <i class="hgi hgi-stroke hgi-pdf-01"></i> Download PDF
                 </button>
-                <a href="{{ url_for('leave.history') }}" class="print-btn secondary" style="text-decoration: none;">
-                    <i class="hgi hgi-arrow-left-01"></i> Back to History
+                <a href="{{ url_for('leave.history') }}" class="print-btn secondary">
+                    <i class="hgi hgi-stroke hgi-arrow-left-01"></i> Back to History
                 </a>
             </div>
             
@@ -226,7 +281,7 @@
                 {% endif %}
                 
                 <div class="instructions">
-                    <h5><i class="hgi hgi-alert-circle"></i> Important Instructions:</h5>
+                    <h5><i class="hgi hgi-stroke hgi-alert-circle"></i> Important Instructions:</h5>
                     <ul class="mb-0">
                         <li>This pass must be presented at the gate during exit and entry</li>
                         <li>Student must return on or before <strong>{{ leave.end_date.strftime('%B %d, %Y') }}</strong></li>
@@ -260,19 +315,37 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- html2pdf dependency for client-side PDF rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 function downloadPDF() {
-    // This would typically use a library like jsPDF or make a server request
-    alert('PDF download functionality would be implemented here');
-    // Example implementation:
-    // window.location.href = "{{ url_for('leave.print_leave', leave_id=leave.id) }}";
+    const element = document.getElementById('printContent');
+    const opt = {
+        margin:       10,
+        filename:     'leave_pass_{{ leave.id }}.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
+    };
+    
+    // Convert and save
+    html2pdf().set(opt).from(element).save();
 }
 
-// Auto-print option
+// Check URL parameters for print or auto-download behaviors
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('autoprint') === 'true') {
     window.onload = function() {
         window.print();
+    };
+} else if (urlParams.get('autodownload') === 'true') {
+    window.onload = function() {
+        downloadPDF();
+        // Redirect back to print view after download starts
+        setTimeout(() => {
+            window.location.href = "{{ url_for('leave.print_leave', leave_id=leave.id) }}";
+        }, 1500);
     };
 }
 </script>

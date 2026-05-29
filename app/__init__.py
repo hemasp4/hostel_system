@@ -51,5 +51,22 @@ def create_app(config_class=Config):
     # Create database tables
     with app.app_context():
         db.create_all()
+        # Add profile_image column if not exists
+        try:
+            from sqlalchemy import text
+            db.session.execute(text('ALTER TABLE users ADD COLUMN profile_image VARCHAR(255)'))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    # Context processor to inject pending leave count globally for the sidebar badge
+    @app.context_processor
+    def inject_pending_leaves_count():
+        from app.models.leave import LeaveRequest
+        try:
+            count = LeaveRequest.query.filter_by(status='pending').count()
+        except Exception:
+            count = 0
+        return dict(pending_leaves_count=count)
 
     return app

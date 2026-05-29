@@ -7,21 +7,21 @@
 <div class="stat-grid-2x2">
   <div>
     <div class="stat-card stat-card-yellow">
-      <i class="hgi hgi-time-quarter-past stat-icon" style="color: var(--yellow);"></i>
+      <i class="hgi hgi-stroke hgi-time-quarter-pass stat-icon" style="color: var(--yellow);"></i>
       <div class="stat-label">Pending Requests</div>
       <div class="stat-value yellow">{{ pending_leaves|length }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-blue">
-      <i class="hgi hgi-camera-01 stat-icon" style="color: var(--blue);"></i>
+      <i class="hgi hgi-stroke hgi-camera-01 stat-icon" style="color: var(--blue);"></i>
       <div class="stat-label">Today's Scans</div>
       <div class="stat-value blue">{{ today_attendance }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-green">
-      <i class="hgi hgi-user-group stat-icon" style="color: var(--green);"></i>
+      <i class="hgi hgi-stroke hgi-user-group stat-icon" style="color: var(--green);"></i>
       <div class="stat-label">Total Students</div>
       <div class="stat-value green">{{ total_students }}</div>
     </div>
@@ -33,16 +33,16 @@
   <div class="card-body">
     <div class="action-group">
       <a href="{{ url_for('warden.qr_scanner') }}" class="btn btn-primary">
-        <i class="hgi hgi-qr-code"></i> Open Scanner
+        <i class="hgi hgi-stroke hgi-qr-code"></i> Open Scanner
       </a>
       <a href="{{ url_for('warden.leave_approvals') }}" class="btn btn-secondary">
-        <i class="hgi hgi-checkmark-square-02"></i> Leave Management
+        <i class="hgi hgi-stroke hgi-checkmark-square-02"></i> Leave Management
       </a>
       <a href="{{ url_for('warden.attendance') }}" class="btn btn-info">
-        <i class="hgi hgi-task-01"></i> Attendance Logs
+        <i class="hgi hgi-stroke hgi-task-01"></i> Attendance Logs
       </a>
       <a href="{{ url_for('warden.student_status') }}" class="btn btn-outline">
-        <i class="hgi hgi-user-list"></i> Presence Status
+        <i class="hgi hgi-stroke hgi-user-list"></i> Presence Status
       </a>
     </div>
   </div>
@@ -80,16 +80,18 @@
             <td class="text-sm">{{ leave.requested_at.strftime('%d %b, %I:%M %p') }}</td>
             <td>
               <div class="action-group" style="justify-content: center;">
-                <a href="{{ url_for('warden.approve_leave', leave_id=leave.id) }}"
-                   class="btn btn-sm btn-success"
-                   onclick="return confirm('Approve this leave request?')">
-                  <i class="hgi hgi-checkmark-01"></i>
-                </a>
-                <a href="{{ url_for('warden.reject_leave', leave_id=leave.id) }}"
-                   class="btn btn-sm btn-danger"
-                   onclick="return confirm('Reject this leave request?')">
-                  <i class="hgi hgi-cancel-01"></i>
-                </a>
+                <button type="button"
+                        class="btn btn-sm btn-success"
+                        data-approve-url="{{ url_for('warden.approve_leave', leave_id=leave.id) }}"
+                        onclick="showConfirm('Approve this leave request?', () => window.location.href = this.getAttribute('data-approve-url'), 'Approve Leave', 'Approve', 'btn-success')">
+                  <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i>
+                </button>
+                <button type="button"
+                        class="btn btn-sm btn-danger"
+                        data-reject-url="{{ url_for('warden.reject_leave', leave_id=leave.id) }}"
+                        onclick="showConfirm('Reject this leave request?', () => window.location.href = this.getAttribute('data-reject-url'), 'Reject Leave', 'Reject', 'btn-danger')">
+                  <i class="hgi hgi-stroke hgi-cancel-01"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -98,7 +100,7 @@
           <tr>
             <td colspan="5">
               <div class="empty-state">
-                <i class="hgi hgi-checkmark-circle-01" style="color: var(--green);"></i>
+                <i class="hgi hgi-stroke hgi-checkmark-circle-01" style="color: var(--green);"></i>
                 <p>No pending leave requests at the moment.</p>
               </div>
             </td>

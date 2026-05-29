@@ -2,6 +2,13 @@
 
 {% block extra_css %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .chart-container {
+        position: relative;
+        height: 220px;
+        width: 100%;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -14,6 +21,7 @@
     </div>
     <div class="card-body">
         <form method="POST" action="{{ url_for('admin.generate_report') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Report Type</label>
@@ -35,7 +43,7 @@
                 <div class="col-md-2">
                     <label class="form-label">&nbsp;</label>
                     <button type="submit" class="btn btn-primary d-block w-100">
-                        <i class="hgi hgi-download-01"></i> Generate
+                        <i class="hgi hgi-stroke hgi-download-01"></i> Generate
                     </button>
                 </div>
             </div>
@@ -50,8 +58,10 @@
             <div class="card-header">
                 <h5 class="mb-0">Leave Requests Trend</h5>
             </div>
-            <div class="card-body">
-                <canvas id="leaveRequestsChart"></canvas>
+            <div class="card-body" style="padding: 1rem;">
+                <div class="chart-container">
+                    <canvas id="leaveRequestsChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -60,8 +70,10 @@
             <div class="card-header">
                 <h5 class="mb-0">Leave Status Distribution</h5>
             </div>
-            <div class="card-body">
-                <canvas id="leaveStatusChart"></canvas>
+            <div class="card-body" style="padding: 1rem;">
+                <div class="chart-container" style="display: flex; justify-content: center;">
+                    <canvas id="leaveStatusChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -73,8 +85,10 @@
             <div class="card-header">
                 <h5 class="mb-0">Monthly Attendance</h5>
             </div>
-            <div class="card-body">
-                <canvas id="attendanceChart"></canvas>
+            <div class="card-body" style="padding: 1rem;">
+                <div class="chart-container">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -83,8 +97,10 @@
             <div class="card-header">
                 <h5 class="mb-0">User Activity</h5>
             </div>
-            <div class="card-body">
-                <canvas id="userActivityChart"></canvas>
+            <div class="card-body" style="padding: 1rem;">
+                <div class="chart-container" style="display: flex; justify-content: center;">
+                    <canvas id="userActivityChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -116,7 +132,7 @@
                         <td>{{ report.generated_at }}</td>
                         <td>
                             <a href="{{ report.download_url }}" class="btn btn-sm btn-primary">
-                                <i class="hgi hgi-download-01"></i> Download
+                                <i class="hgi hgi-stroke hgi-download-01"></i> Download
                             </a>
                         </td>
                     </tr>
@@ -126,23 +142,42 @@
         </div>
     </div>
 </div>
+<div id="chartDataStore" style="display: none;"
+     data-chart-labels="{{ chart_labels|tojson|forceescape }}"
+     data-leave-requests="{{ leave_requests_data|tojson|forceescape }}"
+     data-leave-status="{{ leave_status_data|tojson|forceescape }}"
+     data-attendance-labels="{{ attendance_labels|tojson|forceescape }}"
+     data-exits-data="{{ exits_data|tojson|forceescape }}"
+     data-entries-data="{{ entries_data|tojson|forceescape }}"
+     data-user-activity="{{ (user_activity_data or [0, 0, 0])|tojson|forceescape }}">
+</div>
 
 <script>
+const store = document.getElementById('chartDataStore');
+const chartLabels = JSON.parse(store.getAttribute('data-chart-labels') || '[]');
+const leaveRequestsData = JSON.parse(store.getAttribute('data-leave-requests') || '[]');
+const leaveStatusData = JSON.parse(store.getAttribute('data-leave-status') || '[]');
+const attendanceLabels = JSON.parse(store.getAttribute('data-attendance-labels') || '[]');
+const exitsData = JSON.parse(store.getAttribute('data-exits-data') || '[]');
+const entriesData = JSON.parse(store.getAttribute('data-entries-data') || '[]');
+const userActivityData = JSON.parse(store.getAttribute('data-user-activity') || '[]');
+
 // Leave Requests Trend Chart
 const leaveRequestsCtx = document.getElementById('leaveRequestsChart').getContext('2d');
 new Chart(leaveRequestsCtx, {
     type: 'line',
     data: {
-        labels: {{ chart_labels|tojson }},
+        labels: chartLabels,
         datasets: [{
             label: 'Leave Requests',
-            data: {{ leave_requests_data|tojson }},
+            data: leaveRequestsData,
             borderColor: 'rgb(75, 192, 192)',
             tension: 0.1
         }]
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
             y: {
                 beginAtZero: true
@@ -158,9 +193,22 @@ new Chart(leaveStatusCtx, {
     data: {
         labels: ['Approved', 'Pending', 'Rejected'],
         datasets: [{
-            data: {{ leave_status_data|tojson }},
+            data: leaveStatusData,
             backgroundColor: ['#28a745', '#ffc107', '#dc3545']
         }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12,
+                    padding: 8
+                }
+            }
+        }
     }
 });
 
@@ -169,25 +217,52 @@ const attendanceCtx = document.getElementById('attendanceChart').getContext('2d'
 new Chart(attendanceCtx, {
     type: 'bar',
     data: {
-        labels: {{ attendance_labels|tojson }},
+        labels: attendanceLabels,
         datasets: [{
             label: 'Exits',
-            data: {{ exits_data|tojson }},
+            data: exitsData,
             backgroundColor: '#dc3545'
         }, {
             label: 'Entries',
-            data: {{ entries_data|tojson }},
+            data: entriesData,
             backgroundColor: '#28a745'
         }]
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
             x: {
                 stacked: true
             },
             y: {
                 stacked: true
+            }
+        }
+    }
+});
+
+// User Activity Chart
+const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+new Chart(userActivityCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Students', 'Wardens', 'Admins'],
+        datasets: [{
+            data: userActivityData,
+            backgroundColor: ['#007bff', '#28a745', '#ffc107']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12,
+                    padding: 8
+                }
             }
         }
     }

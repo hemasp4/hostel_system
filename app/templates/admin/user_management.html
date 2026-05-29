@@ -5,7 +5,7 @@
 <div class="page-header">
   <h1 class="page-title" style="margin:0;">User Management</h1>
   <button class="btn btn-primary" onclick="openModal('addUserModal')">
-    <i class="hgi hgi-user-add-01"></i> Add User
+    <i class="hgi hgi-stroke hgi-user-add-01"></i> Add User
   </button>
 </div>
 
@@ -20,7 +20,7 @@
     <span class="card-title">All Users</span>
     <div class="flex gap-2">
       <input type="text" class="form-control" id="searchInput" placeholder="Search users…" style="max-width:180px;" onkeyup="searchUsers()">
-      <button class="btn btn-sm btn-success" onclick="exportUsers()"><i class="hgi hgi-file-export"></i>Export</button>
+      <button class="btn btn-sm btn-success" onclick="exportUsers()"><i class="hgi hgi-stroke hgi-file-export"></i>Export</button>
     </div>
   </div>
   <div class="table-wrap">
@@ -30,7 +30,7 @@
       </thead>
       <tbody>
         {% for user in users %}
-        <tr>
+        <tr id="user-row-{{ user.id }}">
           <td>{{ user.id }}</td>
           <td>{{ user.name }}</td>
           <td>{{ user.email }}</td>
@@ -40,21 +40,29 @@
               {{ user.role|title }}
             </span>
           </td>
-          <td>
-            {% if user.is_active %}<span class="badge badge-success">Active</span>
-            {% else %}<span class="badge badge-secondary">Inactive</span>{% endif %}
+          <td class="status-badge-cell">
+            {% if user.is_active %}
+              <span class="badge badge-success"><i class="hgi hgi-stroke hgi-checkmark-circle-01" style="font-size:0.8rem; margin-right:3px;"></i>Active</span>
+            {% else %}
+              <span class="badge badge-secondary"><i class="hgi hgi-stroke hgi-cancel-01" style="font-size:0.8rem; margin-right:3px;"></i>Inactive</span>
+            {% endif %}
           </td>
           <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
           <td><div class="action-table">
             {% set action_label = 'Deactivate' if user.is_active else 'Activate' %}
-            <a href="{{ url_for('admin.toggle_user', user_id=user.id) }}"
-               class="btn btn-sm {{ 'btn-danger' if user.is_active else 'btn-success' }}"
-               onclick="return confirm('{{ action_label }} this user?')">
-              <i class="hgi hgi-{{ 'cancel-01' if user.is_active else 'checkmark-01' }}"></i><span>{{ action_label }}</span>
-            </a>
+            <button type="button"
+                    class="btn btn-sm {{ 'btn-warning' if user.is_active else 'btn-success' }} toggle-user-btn"
+                    data-user-id="{{ user.id }}"
+                    data-user-name="{{ user.name }}"
+                    data-is-active="{{ 'true' if user.is_active else 'false' }}"
+                    data-action-label="{{ action_label }}"
+                    data-btn-class="{{ 'btn-warning' if user.is_active else 'btn-success' }}"
+                    onclick="confirmToggleUser(this)">
+              <i class="hgi hgi-stroke hgi-{{ 'cancel-01' if user.is_active else 'checkmark-circle-01' }}"></i><span>{{ action_label }}</span>
+            </button>
             {% if user.id != current_user.id %}
-            <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user.id }}')">
-              <i class="hgi hgi-delete-01"></i><span>Delete</span>
+            <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user.id }}', '{{ user.name }}')">
+              <i class="hgi hgi-stroke hgi-delete-01"></i><span>Delete</span>
             </button>
             {% endif %}
           </div>
@@ -91,7 +99,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary"><i class="hgi hgi-user-add-01"></i> Add User</button>
+        <button type="submit" class="btn btn-primary"><i class="hgi hgi-stroke hgi-user-add-01"></i> Add User</button>
       </div>
     </form>
   </div>
@@ -104,9 +112,104 @@ function searchUsers() {
     r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 }
-function deleteUser(id) {
-  if (confirm('Permanently delete this user?')) window.location.href = `/admin/users/delete/${id}`;
+function confirmToggleUser(btn) {
+  const userId = btn.getAttribute('data-user-id');
+  const userName = btn.getAttribute('data-user-name');
+  const isActive = btn.getAttribute('data-is-active') === 'true';
+  const actionLabel = btn.getAttribute('data-action-label');
+  const btnClass = btn.getAttribute('data-btn-class');
+  
+  showConfirm(
+    `${actionLabel} this user?`,
+    () => toggleUserActive(userId, userName, isActive),
+    'Confirm Action',
+    actionLabel,
+    btnClass
+  );
 }
+function toggleUserActive(userId, userName, currentIsActive) {
+  const url = `/admin/users/toggle/${userId}`;
+  fetch(url)
+    .then(response => {
+      if (response.ok) {
+        const row = document.getElementById(`user-row-${userId}`);
+        if (row) {
+          const badgeCell = row.querySelector('.status-badge-cell');
+          const button = row.querySelector('.toggle-user-btn');
+          
+          const newActive = !currentIsActive;
+          const actionLabel = newActive ? 'Deactivate' : 'Activate';
+          
+          if (newActive) {
+            badgeCell.innerHTML = `<span class="badge badge-success"><i class="hgi hgi-stroke hgi-checkmark-circle-01" style="font-size:0.8rem; margin-right:3px;"></i>Active</span>`;
+            button.className = 'btn btn-sm btn-warning toggle-user-btn';
+            button.innerHTML = `<i class="hgi hgi-stroke hgi-cancel-01"></i><span>Deactivate</span>`;
+          } else {
+            badgeCell.innerHTML = `<span class="badge badge-secondary"><i class="hgi hgi-stroke hgi-cancel-01" style="font-size:0.8rem; margin-right:3px;"></i>Inactive</span>`;
+            button.className = 'btn btn-sm btn-success toggle-user-btn';
+            button.innerHTML = `<i class="hgi hgi-stroke hgi-checkmark-circle-01"></i><span>Activate</span>`;
+          }
+          
+          button.setAttribute('data-is-active', newActive ? 'true' : 'false');
+          button.setAttribute('data-action-label', actionLabel);
+          button.setAttribute('data-btn-class', newActive ? 'btn-warning' : 'btn-success');
+          
+          showUndoToast(
+            `User "${userName}" has been ${newActive ? 'activated' : 'deactivated'}.`,
+            () => toggleUserActive(userId, userName, newActive)
+          );
+        }
+      }
+    });
+}
+let pendingDeletions = {};
+function deleteUser(id, userName) {
+  showConfirm(
+    `Delete user "${userName}"? This action can be undone for a few seconds.`, 
+    () => {
+      const row = document.getElementById(`user-row-${id}`);
+      if (row) {
+        row.style.display = 'none';
+        showUndoToast(
+          `User "${userName}" has been deleted.`,
+          () => {
+            if (pendingDeletions[id]) {
+              clearTimeout(pendingDeletions[id]);
+              delete pendingDeletions[id];
+            }
+            row.style.display = '';
+          }
+        );
+        pendingDeletions[id] = setTimeout(() => {
+          commitDelete(id);
+        }, 6000);
+      }
+    },
+    'Delete User',
+    'Delete',
+    'btn-danger'
+  );
+}
+function commitDelete(id) {
+  if (pendingDeletions[id]) {
+    delete pendingDeletions[id];
+  }
+  const url = `/admin/users/delete/${id}`;
+  fetch(url).then(response => {
+    if (response.ok) {
+      const row = document.getElementById(`user-row-${id}`);
+      if (row) {
+        row.remove();
+      }
+    }
+  });
+}
+window.addEventListener('beforeunload', () => {
+  for (const id in pendingDeletions) {
+    clearTimeout(pendingDeletions[id]);
+    fetch(`/admin/users/delete/${id}`, { keepalive: true, method: 'GET' });
+  }
+});
 function exportUsers() {
   exportTableToCSV('usersTable', 'user_records.csv');
 }

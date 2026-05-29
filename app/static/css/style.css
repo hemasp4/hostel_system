@@ -344,8 +344,13 @@ a:hover { color: var(--blue-dark); }
 .col-1 { flex: 1; min-width: 0; }
 .col-sidebar { flex: 0 0 260px; min-width: 0; }
 .col-main   { flex: 1; min-width: 0; }
+.col-profile-main { flex: 0 0 calc(65% - 0.625rem); min-width: 0; }
+.col-profile-sidebar { flex: 0 0 calc(35% - 0.625rem); min-width: 0; }
+.col-profile-sidebar .table td { padding: 0.5rem 0.75rem; }
+
 @media (max-width: 768px) {
-  .col-2, .col-3, .col-4 { flex: 0 0 100%; }
+  .col-2, .col-3, .col-4, .col-profile-main, .col-profile-sidebar { flex: 0 0 100% !important; }
+  .form-row { flex-direction: column; gap: 0.75rem; }
   .sidebar { display: none; }
   .main-content { padding: 1rem; }
 }
@@ -491,6 +496,41 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   font-size: 0.875rem;
   margin-bottom: 1rem;
   border: 1px solid transparent;
+}
+.alert-dismissible {
+  position: relative;
+  padding-right: 2.5rem;
+}
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.alert-body {
+  flex: 1;
+  min-width: 200px;
+}
+.alert-actions-group {
+  display: flex;
+  gap: 0.5rem;
+}
+@media (max-width: 576px) {
+  .alert-dismissible {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .alert-body {
+    padding-left: 1.5rem;
+  }
+  .alert-actions-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.25rem;
+  }
 }
 .alert-success { background: var(--green-light); color: var(--green-dark); border-color: #BBF7D0; }
 .alert-danger  { background: var(--red-light);   color: var(--red-dark);   border-color: #FECACA; }
@@ -1229,6 +1269,19 @@ footer {
     padding: 0.75rem 0.5rem !important;
     font-size: 0.85rem !important;
     min-height: 44px !important;
+  }
+  .table .action-group {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    width: auto !important;
+  }
+  .table .action-group .btn {
+    width: auto !important;
+    padding: 0.4rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    min-height: 0 !important;
   }
 }
 /* -- Pagination ----------------------------------------- */

@@ -4,7 +4,7 @@
 <div class="page-header">
   <h1 class="page-title" style="margin:0;">Request Leave</h1>
   <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">
-    <i class="hgi hgi-arrow-left-01"></i> Back to Dashboard
+    <i class="hgi hgi-stroke hgi-arrow-left-01"></i> Back to Dashboard
   </a>
 </div>
 
@@ -40,14 +40,14 @@
       </div>
 
       <div class="alert alert-info">
-        <i class="hgi hgi-information-circle"></i>
+        <i class="hgi hgi-stroke hgi-information-circle"></i>
         <span><strong>Note:</strong> Leave requests should be submitted at least 24 hours in advance and are subject to warden approval.</span>
       </div>
 
       <div class="flex-between mt-1">
         <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary" id="submit-leave">
-          <i class="hgi hgi-checkmark-circle-01"></i> Submit Request
+          <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Submit Request
         </button>
       </div>
     </form>

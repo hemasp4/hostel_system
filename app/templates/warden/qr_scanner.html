@@ -122,19 +122,19 @@
                 <!-- Scanner Controls -->
                 <div class="text-center mt-3">
                     <button id="startButton" class="btn btn-primary" onclick="startScanning()">
-                        <i class="hgi hgi-camera-01"></i> Start Camera Scan
+                        <i class="hgi hgi-stroke hgi-camera-01"></i> Start Camera Scan
                     </button>
                     <button id="stopButton" class="btn btn-danger" onclick="stopScanning()" style="display:none;">
-                        <i class="hgi hgi-stop"></i> Stop Scanning
+                        <i class="hgi hgi-stroke hgi-stop"></i> Stop Scanning
                     </button>
                     <button class="btn btn-success" onclick="triggerFileUpload()">
-                        <i class="hgi hgi-upload-01"></i> Upload QR Image
+                        <i class="hgi hgi-stroke hgi-upload-01"></i> Upload QR Image
                     </button>
                 </div>
                 
                 <!-- File Upload Section -->
                 <div class="upload-section" id="uploadSection">
-                    <i class="hgi hgi-cloud-upload"></i>
+                    <i class="hgi hgi-stroke hgi-cloud-upload"></i>
                     <p class="mb-0">Click to upload QR code image</p>
                     <small class="text-muted">or drag and drop here</small>
                 </div>
@@ -151,8 +151,8 @@
                             
                             <div class="row">
                                 <div class="col-md-4 text-center">
-                                    <div class="student-photo-placeholder">
-                                        <i class="hgi hgi-user-circle"></i>
+                                    <div class="student-photo-placeholder" id="studentPhotoContainer">
+                                        <i class="hgi hgi-stroke hgi-user-circle"></i>
                                     </div>
                                     <h6 class="mt-3" id="studentNameLarge"></h6>
                                     <span class="badge bg-primary" id="studentIdBadge"></span>
@@ -205,10 +205,10 @@
                             
                             <div class="mt-3 text-center">
                                 <button class="btn btn-success" onclick="confirmScan()">
-                                    <i class="hgi hgi-checkmark-01"></i> Confirm & Allow
+                                    <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Confirm & Allow
                                 </button>
                                 <button class="btn btn-secondary ms-2" onclick="resetScanner()">
-                                    <i class="hgi hgi-refresh"></i> Scan Another
+                                    <i class="hgi hgi-stroke hgi-refresh"></i> Scan Another
                                 </button>
                             </div>
                         </div>
@@ -217,11 +217,11 @@
                     <!-- Invalid QR Code Message -->
                     <div id="invalidQRDetails" style="display: none;">
                         <div class="text-center">
-                            <i class="hgi hgi-alert-circle"></i>
+                            <i class="hgi hgi-stroke hgi-alert-circle"></i>
                             <h5>Invalid QR Code</h5>
                             <p id="errorMessage" class="text-muted"></p>
                             <button class="btn btn-primary mt-3" onclick="resetScanner()">
-                                <i class="hgi hgi-refresh"></i> Try Again
+                                <i class="hgi hgi-stroke hgi-refresh"></i> Try Again
                             </button>
                         </div>
                     </div>
@@ -515,7 +515,7 @@ function showScanResult(data) {
         statusMessage.className = 'qr-status-valid';
         statusMessage.innerHTML = `
             <div class="d-flex align-items-center">
-                <i class="hgi hgi-checkmark-circle-01"></i>
+                <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i>
                 <div>
                     <h5 class="mb-0">Valid QR Code</h5>
                     <p class="mb-0">${data.message}</p>
@@ -533,6 +533,16 @@ function showScanResult(data) {
         document.getElementById('leaveDays').textContent = `${data.leave_days || 'N/A'} days`;
         document.getElementById('scanTimeDetail').textContent = data.timestamp || new Date().toLocaleString();
         
+        // Update photo container with profile image or default icon
+        const photoContainer = document.getElementById('studentPhotoContainer');
+        if (data.student_profile_image) {
+            photoContainer.innerHTML = `<img src="/static/uploads/profiles/${data.student_profile_image}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid var(--blue);">`;
+            photoContainer.style.background = 'transparent';
+        } else {
+            photoContainer.innerHTML = `<i class="hgi hgi-stroke hgi-user-circle" style="font-size:48px;color:#6c757d;"></i>`;
+            photoContainer.style.background = '#e9ecef';
+        }
+        
         // Set scan type badge
         const scanTypeBadge = document.getElementById('scanTypeBadge');
         if (data.scan_type) {
@@ -549,7 +559,7 @@ function showScanResult(data) {
         statusMessage.className = 'qr-status-invalid';
         statusMessage.innerHTML = `
             <div class="d-flex align-items-center">
-                <i class="hgi hgi-cancel-circle"></i>
+                <i class="hgi hgi-stroke hgi-cancel-circle"></i>
                 <div>
                     <h5 class="mb-0">Invalid QR Code</h5>
                     <p class="mb-0">The scanned QR code is not valid or has expired.</p>

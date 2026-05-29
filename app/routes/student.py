@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for,flash,request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from ..utils.decorators import role_required
 from ..models.leave import LeaveRequest
@@ -62,6 +62,21 @@ def update_profile():
         current_user.name = name
         current_user.email = email
         current_user.phone = phone
+        
+        # Handle profile image upload
+        profile_image = request.files.get('profile_image')
+        if profile_image and profile_image.filename:
+            import os
+            from werkzeug.utils import secure_filename
+            
+            # Create uploads directory if not exists
+            upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            ext = os.path.splitext(profile_image.filename)[1]
+            filename = f"user_{current_user.id}{ext}"
+            profile_image.save(os.path.join(upload_dir, filename))
+            current_user.profile_image = filename
         
         # Update password if provided
         if current_password and new_password:

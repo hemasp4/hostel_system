@@ -17,6 +17,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default='student')  # student, warden, admin
     password_hash = db.Column(db.String(200), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+    profile_image = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

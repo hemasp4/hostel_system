@@ -23,13 +23,13 @@
   <!-- Navbar -->
   <nav class="navbar">
     <a class="navbar-brand" href="{{ url_for('main.landing') }}">
-      <i class="hgi hgi-building-01" style="font-size:1.2rem;"></i>
+      <i class="hgi hgi-stroke hgi-building-01" style="font-size:1.2rem;"></i>
       HostelHub
     </a>
 
     {% if current_user.is_authenticated %}
       <button type="button" class="mobile-menu-btn" id="mobileMenuToggle" aria-label="Open navigation menu" aria-controls="appSidebar" aria-expanded="false">
-        <i class="hgi hgi-menu-01"></i>
+        <i class="hgi hgi-stroke hgi-menu-01"></i>
         <span>Menu</span>
       </button>
     {% endif %}
@@ -45,7 +45,7 @@
         </li>
         <li class="nav-item">
           <a class="nav-link logout-link" href="{{ url_for('auth.logout') }}" aria-label="Logout">
-            <i class="hgi hgi-logout-01"></i> <span class="logout-text">Logout</span>
+            <i class="hgi hgi-stroke hgi-logout-01"></i> <span class="logout-text">Logout</span>
           </a>
         </li>
       {% else %}
@@ -61,7 +61,7 @@
       <div style="padding: 0.75rem 1.5rem 0;">
         {% for category, message in messages %}
           <div class="alert alert-{{ 'danger' if category == 'error' else category }}" id="flash-{{ loop.index }}">
-            <i class="hgi hgi-{{ 'checkmark-circle-01' if category == 'success' else 'alert-circle' if category == 'danger' else 'information-circle' }}"></i>
+            <i class="hgi hgi-stroke hgi-{{ 'checkmark-circle-01' if category == 'success' else 'alert-circle' if category == 'danger' else 'information-circle' }}"></i>
             <span>{{ message }}</span>
             <button class="alert-close" onclick="this.parentElement.remove()">×</button>
           </div>
@@ -90,6 +90,24 @@
     © 2025 HostelHub Management System. All rights reserved.
   </footer>
 
+
+  <!-- Reusable Custom Confirm Modal -->
+  <div class="modal-overlay" id="customConfirmModal" style="z-index: 9999;">
+    <div class="modal-box" style="max-width: 400px; padding: 1.5rem;">
+      <div class="modal-header" style="padding-bottom: 0.75rem; border-bottom: 1px solid var(--gray-100);">
+        <span class="modal-title" id="customConfirmTitle" style="font-weight: 700; font-size: 1.1rem; color: var(--gray-900);">Confirm Action</span>
+        <button class="modal-close" onclick="closeModal('customConfirmModal')">×</button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem 0;">
+        <p id="customConfirmMessage" style="font-size: 0.95rem; line-height: 1.5; color: var(--gray-700); margin: 0;"></p>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--gray-100);">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('customConfirmModal')">Cancel</button>
+        <button type="button" class="btn btn-primary" id="customConfirmSubmitBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <!-- jQuery (kept for existing JS compatibility) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -106,6 +124,56 @@
       document.getElementById(id).classList.remove('active');
       document.body.style.overflow = '';
     }
+
+    let customConfirmCallback = null;
+    let customAlertCallback = null;
+
+    function showConfirm(message, callback, title = 'Confirm Action', confirmBtnText = 'Confirm', confirmBtnClass = 'btn-primary') {
+      document.getElementById('customConfirmMessage').textContent = message;
+      document.getElementById('customConfirmTitle').textContent = title;
+      
+      const submitBtn = document.getElementById('customConfirmSubmitBtn');
+      submitBtn.textContent = confirmBtnText;
+      
+      // Reset classes and set the new one
+      submitBtn.className = 'btn ' + confirmBtnClass;
+      
+      const cancelBtn = document.querySelector('#customConfirmModal .btn-secondary');
+      if (cancelBtn) cancelBtn.style.display = '';
+      
+      customConfirmCallback = callback;
+      customAlertCallback = null;
+      openModal('customConfirmModal');
+    }
+
+    function showAlert(message, title = 'Message', callback = null) {
+      document.getElementById('customConfirmMessage').textContent = message;
+      document.getElementById('customConfirmTitle').textContent = title;
+      
+      const submitBtn = document.getElementById('customConfirmSubmitBtn');
+      submitBtn.textContent = 'OK';
+      submitBtn.className = 'btn btn-primary';
+      
+      const cancelBtn = document.querySelector('#customConfirmModal .btn-secondary');
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      
+      customAlertCallback = callback;
+      customConfirmCallback = null;
+      openModal('customConfirmModal');
+    }
+
+    document.getElementById('customConfirmSubmitBtn').addEventListener('click', function() {
+      closeModal('customConfirmModal');
+      if (customConfirmCallback) {
+        customConfirmCallback();
+        customConfirmCallback = null;
+      }
+      if (customAlertCallback) {
+        customAlertCallback();
+        customAlertCallback = null;
+      }
+    });
+
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const appSidebar = document.getElementById('appSidebar');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
@@ -147,6 +215,119 @@
         setTimeout(function() { a.remove(); }, 400);
       });
     }, 5000);
+
+    // Global Undo Toast framework
+    let lastUndoAction = null;
+    let undoToastTimeout = null;
+
+    function showUndoToast(message, undoCallback, duration = 6000) {
+      if (undoToastTimeout) {
+        clearTimeout(undoToastTimeout);
+      }
+      
+      lastUndoAction = undoCallback;
+      
+      let toast = document.getElementById('undoToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'undoToast';
+        toast.style.cssText = `
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 100000;
+          background: rgba(15, 23, 42, 0.95);
+          color: #fff;
+          padding: 10px 16px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+          font-size: 0.85rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(8px);
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+          transform: translateY(100px);
+          opacity: 0;
+        `;
+        document.body.appendChild(toast);
+      }
+      
+      toast.innerHTML = `
+        <span style="font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="hgi hgi-stroke hgi-checkmark-circle-01" style="color: #10b981; font-size: 1.1rem;"></i>
+          ${message}
+        </span>
+        <button id="undoToastBtn" style="
+          background: #3b82f6;
+          border: none;
+          color: #fff;
+          padding: 6px 12px;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.75rem;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: background 0.2s;
+        ">
+          <i class="hgi hgi-stroke hgi-rotate-left-01" style="font-size: 0.85rem;"></i> Undo
+        </button>
+        <button onclick="hideUndoToast()" style="
+          background: none;
+          border: none;
+          color: rgba(255,255,255,0.6);
+          cursor: pointer;
+          font-size: 1.2rem;
+          padding: 0 4px;
+          display: flex;
+          align-items: center;
+          line-height: 1;
+        ">×</button>
+      `;
+      
+      document.getElementById('undoToastBtn').onclick = function() {
+        if (lastUndoAction) {
+          lastUndoAction();
+          lastUndoAction = null;
+        }
+        hideUndoToast();
+      };
+      
+      // Auto-reposition on mobile
+      const mediaQuery = window.matchMedia('(max-width: 576px)');
+      function handleMobile(e) {
+        if (e.matches) {
+          toast.style.right = '16px';
+          toast.style.left = '16px';
+          toast.style.bottom = '16px';
+          toast.style.justifyContent = 'space-between';
+        } else {
+          toast.style.right = '24px';
+          toast.style.left = 'auto';
+          toast.style.bottom = '24px';
+        }
+      }
+      mediaQuery.addListener(handleMobile);
+      handleMobile(mediaQuery);
+
+      setTimeout(() => {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+      }, 50);
+      
+      undoToastTimeout = setTimeout(hideUndoToast, duration);
+    }
+
+    function hideUndoToast() {
+      const toast = document.getElementById('undoToast');
+      if (toast) {
+        toast.style.transform = 'translateY(100px)';
+        toast.style.opacity = '0';
+      }
+    }
   </script>
 
   {% block extra_js %}{% endblock %}

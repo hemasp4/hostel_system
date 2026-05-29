@@ -8,19 +8,7 @@ from app.services.leave_service import create_leave_request
 from app.services.email_service import send_leave_request_email
 from app.utils.decorators import role_required
 from datetime import datetime
-try:
-    import pdfkit
-    # Explicit path for Windows - wkhtmltopdf is not auto-added to PATH
-    WKHTMLTOPDF_PATH = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-    import os as _os
-    PDFKIT_AVAILABLE = _os.path.exists(WKHTMLTOPDF_PATH)
-    if PDFKIT_AVAILABLE:
-        PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
-    else:
-        PDFKIT_CONFIG = None
-except ImportError:
-    PDFKIT_AVAILABLE = False
-    PDFKIT_CONFIG = None
+# PDF generation is handled client-side via html2pdf for full cross-platform compatibility
 
 leave_bp = Blueprint('leave', __name__, url_prefix='/leave')
 
@@ -162,31 +150,12 @@ def print_leave(leave_id):
 @leave_bp.route('/download-pdf/<int:leave_id>')
 @login_required
 def download_pdf(leave_id):
-    """Generate and download PDF for leave pass"""
+    """Generate and download PDF for leave pass (redirects to print view with autodownload)"""
     leave = LeaveRequest.query.get_or_404(leave_id)
     
     # Check permission
     if current_user.role == 'student' and leave.student_id != current_user.id:
         flash('Unauthorized action', 'danger')
         return redirect(url_for('leave.history'))
-    
-    # Check if pdfkit/wkhtmltopdf is available
-    if not PDFKIT_AVAILABLE:
-        flash('PDF generation requires wkhtmltopdf. Please install it from https://wkhtmltopdf.org/downloads.html', 'warning')
-        return redirect(url_for('leave.print_leave', leave_id=leave_id))
-
-    # Render the template
-    html = render_template('student/leave_print.html', leave=leave)
-
-    try:
-        # Generate PDF with explicit wkhtmltopdf path (Windows)
-        pdf = pdfkit.from_string(html, False, configuration=PDFKIT_CONFIG)
-
-        # Create response
-        response = make_response(pdf)
-        response.headers['Content-Type'] = 'application/pdf'
-        response.headers['Content-Disposition'] = f'attachment; filename=leave_pass_{leave_id}.pdf'
-        return response
-    except OSError:
-        flash('PDF generation failed: wkhtmltopdf binary not found. Please install it from https://wkhtmltopdf.org/downloads.html', 'danger')
-        return redirect(url_for('leave.print_leave', leave_id=leave_id))
+        
+    return redirect(url_for('leave.print_leave', leave_id=leave_id, autodownload='true'))

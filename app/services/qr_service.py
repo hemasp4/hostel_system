@@ -11,7 +11,7 @@ def generate_qr_code(leave_id):
     qr_data = f"LEAVE-{leave_id}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
     
     # Create QR code
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr = qrcode.QRCode(version=1, box_size=12, border=6)
     qr.add_data(qr_data)
     qr.make(fit=True)
     

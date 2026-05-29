@@ -8,7 +8,7 @@
 <div class="card mb-2">
   <div class="card-header" style="background:var(--yellow-light);">
     <span class="card-title" style="color:var(--yellow);">
-      <i class="hgi hgi-clock-01"></i> Pending Leave Requests
+      <i class="hgi hgi-stroke hgi-clock-01"></i> Pending Leave Requests
     </span>
     <span class="badge badge-warning">{{ pending_leaves|length }}</span>
   </div>
@@ -28,19 +28,20 @@
             <td>{{ leave.reason[:50] }}…</td>
             <td>{{ leave.requested_at.strftime('%d %b %Y %H:%M') }}</td>
             <td class="flex gap-1">
-              <a href="{{ url_for('warden.approve_leave', leave_id=leave.id) }}"
-                 class="btn btn-sm btn-success"
-                 onclick="return confirm('Approve this leave request?')">
-                <i class="hgi hgi-checkmark-01"></i> Approve
-              </a>
-              <button class="btn btn-sm btn-danger" onclick="showRejectModal({{ leave.id }})">
-                <i class="hgi hgi-cancel-01"></i> Reject
+              <button type="button"
+                      class="btn btn-sm btn-success"
+                      data-approve-url="{{ url_for('warden.approve_leave', leave_id=leave.id) }}"
+                      onclick="showConfirm('Approve this leave request?', () => window.location.href = this.getAttribute('data-approve-url'), 'Approve Leave', 'Approve', 'btn-success')">
+                <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Approve
+              </button>
+              <button class="btn btn-sm btn-danger" data-leave-id="{{ leave.id }}" onclick="showRejectModal(this.getAttribute('data-leave-id'))">
+                <i class="hgi hgi-stroke hgi-cancel-01"></i> Reject
               </button>
             </td>
           </tr>
           {% endfor %}
         {% else %}
-          <tr><td colspan="7"><div class="empty-state"><i class="hgi hgi-checkmark-circle-01"></i>No pending requests</div></td></tr>
+          <tr><td colspan="7"><div class="empty-state"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i>No pending requests</div></td></tr>
         {% endif %}
       </tbody>
     </table>
@@ -97,7 +98,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeModal('rejectModal')">Cancel</button>
-        <button type="submit" class="btn btn-danger"><i class="hgi hgi-cancel-01"></i> Reject Leave</button>
+        <button type="submit" class="btn btn-danger"><i class="hgi hgi-stroke hgi-cancel-01"></i> Reject Leave</button>
       </div>
     </form>
   </div>

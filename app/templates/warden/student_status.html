@@ -61,8 +61,8 @@
       <div class="form-group dashboard-actions-field" style="margin:0;">
         <label class="form-label">Actions</label>
         <div class="action-group dashboard-actions">
-          <button class="btn btn-success" onclick="exportToExcel()"><i class="hgi hgi-file-export"></i>Export</button>
-          <button class="btn btn-primary" onclick="window.print()"><i class="hgi hgi-printer"></i>Print</button>
+          <button class="btn btn-success" onclick="exportToExcel()"><i class="hgi hgi-stroke hgi-file-export"></i>Export</button>
+          <button class="btn btn-primary" onclick="window.print()"><i class="hgi hgi-stroke hgi-printer"></i>Print</button>
         </div>
       </div>
     </div>
@@ -97,13 +97,13 @@
           <td>{{ item.student.room_no|default('N/A') }}</td>
           <td>
             {% if item.status == 'inside' %}
-              <span class="badge badge-success"><i class="hgi hgi-checkmark-01"></i> Present</span>
+              <span class="badge badge-success"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Present</span>
             {% elif item.status == 'on_leave_outside' %}
-              <span class="badge badge-primary"><i class="hgi hgi-calendar-check-in"></i> On Leave</span>
+              <span class="badge badge-primary"><i class="hgi hgi-stroke hgi-calendar-check-in-01"></i> On Leave</span>
             {% elif item.status == 'on_leave_inside' %}
-              <span class="badge badge-primary"><i class="hgi hgi-home-01"></i> Leave In</span>
+              <span class="badge badge-primary"><i class="hgi hgi-stroke hgi-home-01"></i> Leave In</span>
             {% elif item.status == 'outside_no_leave' %}
-              <span class="badge badge-danger"><i class="hgi hgi-alert-01"></i> Absent</span>
+              <span class="badge badge-danger"><i class="hgi hgi-stroke hgi-alert-01"></i> Absent</span>
             {% else %}
               <span class="badge badge-secondary">Unknown</span>
             {% endif %}
@@ -127,11 +127,11 @@
           <td class="actions-cell">
             <div class="action-table">
               <button class="btn btn-sm btn-info" onclick="viewStudentDetails('{{ item.student.id }}')">
-                <i class="hgi hgi-eye"></i><span>View</span>
+                <i class="hgi hgi-stroke hgi-eye"></i><span>View</span>
               </button>
               {% if item.status == 'outside_no_leave' %}
                 <button class="btn btn-sm btn-warning" onclick="sendAlert('{{ item.student.id }}')">
-                  <i class="hgi hgi-notification-01"></i><span>Alert</span>
+                  <i class="hgi hgi-stroke hgi-notification-01"></i><span>Alert</span>
                 </button>
               {% endif %}
             </div>
@@ -180,7 +180,7 @@ function viewStudentDetails(id) {
           <div>
             <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--blue); padding:1.25rem; width:100%; height:100%;">
               <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--blue); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
-                <i class="hgi hgi-user"></i>Personal Info
+                <i class="hgi hgi-stroke hgi-user"></i>Personal Info
               </h4>
               <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block">Full Name</span><div class="fw-700" style="font-size:0.95rem;">${data.name}</div></div>
               <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block">Email</span><div class="text-sm" style="word-break:break-all;">${data.email}</div></div>
@@ -191,7 +191,7 @@ function viewStudentDetails(id) {
           <div>
             <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--green); padding:1.25rem; width:100%; height:100%;">
               <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--green); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
-                <i class="hgi hgi-calendar-01"></i>Leave Stats
+                <i class="hgi hgi-stroke hgi-calendar-01"></i>Leave Stats
               </h4>
               <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.25rem; width:100%; text-align:center; margin-top:0.5rem;">
                 <div style="padding:0.4rem 0;"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Total</span><div class="fw-800" style="font-size:1.25rem;">${data.total_leaves}</div></div>
@@ -208,14 +208,14 @@ function viewStudentDetails(id) {
 }
 
 function sendAlert(studentId) {
-  if (confirm('Send absence notification to this student?')) {
+  showConfirm('Send absence notification to this student?', () => {
     fetch(`/warden/notify-absent/${studentId}`, {
       method: 'POST',
       headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
     }).then(response => {
-      if (response.ok) alert('Notification sent successfully');
+      if (response.ok) showAlert('Notification sent successfully', 'Notification Alert');
     });
-  }
+  }, 'Send Notification', 'Send Alert', 'btn-warning');
 }
 
 function exportToExcel() {

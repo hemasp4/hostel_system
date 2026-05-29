@@ -9,28 +9,28 @@
 <div class="stat-grid-2x2">
   <div>
     <div class="stat-card stat-card-blue">
-      <i class="hgi hgi-user-group stat-icon" style="color: var(--blue);"></i>
+      <i class="hgi hgi-stroke hgi-user-group stat-icon" style="color: var(--blue);"></i>
       <div class="stat-label">Total Students</div>
       <div class="stat-value blue">{{ total_students }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-green">
-      <i class="hgi hgi-user-shield stat-icon" style="color: var(--green);"></i>
+      <i class="hgi hgi-stroke hgi-user-shield-01 stat-icon" style="color: var(--green);"></i>
       <div class="stat-label">Total Wardens</div>
       <div class="stat-value green">{{ total_wardens }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-yellow">
-      <i class="hgi hgi-time-quarter-past stat-icon" style="color: var(--yellow);"></i>
+      <i class="hgi hgi-stroke hgi-time-quarter-pass stat-icon" style="color: var(--yellow);"></i>
       <div class="stat-label">Pending Leaves</div>
       <div class="stat-value yellow">{{ pending_leaves }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-red">
-      <i class="hgi hgi-calendar-check-in stat-icon" style="color: var(--red);"></i>
+      <i class="hgi hgi-stroke hgi-calendar-check-in-01 stat-icon" style="color: var(--red);"></i>
       <div class="stat-label">Total Leaves</div>
       <div class="stat-value red">{{ total_leaves }}</div>
     </div>
@@ -42,13 +42,13 @@
   <div class="card-body">
     <div class="action-group">
       <a href="{{ url_for('admin.user_management') }}" class="btn btn-primary">
-        <i class="hgi hgi-user-edit"></i> Manage Users
+        <i class="hgi hgi-stroke hgi-user-edit-01"></i> Manage Users
       </a>
       <a href="{{ url_for('admin.reports') }}" class="btn btn-secondary">
-        <i class="hgi hgi-chart-line"></i> Analytics & Reports
+        <i class="hgi hgi-stroke hgi-chart-line-data-01"></i> Analytics & Reports
       </a>
       <a href="{{ url_for('admin.settings') }}" class="btn btn-outline">
-        <i class="hgi hgi-settings-01"></i> System Settings
+        <i class="hgi hgi-stroke hgi-settings-01"></i> System Settings
       </a>
     </div>
   </div>
@@ -79,9 +79,8 @@
 </div>
 
 <div class="card">
-  <div class="card-header flex-between">
+  <div class="card-header">
     <span class="card-title">Recent Activity</span>
-    <a href="{{ url_for('admin.reports') }}" class="text-sm fw-600">View Detailed Reports</a>
   </div>
   <div class="table-wrap">
     <table class="table">
@@ -117,7 +116,7 @@
           <td class="text-muted text-sm">{{ leave.requested_at.strftime('%d %b, %Y') }}</td>
           <td class="text-center">
             <button class="btn btn-sm btn-info" onclick="viewDetails('{{ leave.id }}')">
-              <i class="hgi hgi-eye"></i> View
+              <i class="hgi hgi-stroke hgi-eye"></i> View
             </button>
           </td>
         </tr>
@@ -196,9 +195,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+</script>
 
-function viewDetails(id) { 
-  alert('Viewing details for Leave #' + id); 
+<!-- Details Modal -->
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal-box modal-box-lg">
+    <div class="modal-header">
+      <span class="modal-title">Leave Request Details</span>
+      <button class="modal-close" onclick="closeModal('detailsModal')">×</button>
+    </div>
+    <div class="modal-body" id="detailsContent"></div>
+  </div>
+</div>
+
+<script>
+function viewDetails(id) {
+  fetch(`/leave/details/${id}`)
+    .then(r => r.json())
+    .then(data => {
+      let statusBadge = '';
+      if (data.status === 'pending') {
+        statusBadge = '<span class="badge badge-warning">Pending</span>';
+      } else if (data.status === 'approved') {
+        statusBadge = '<span class="badge badge-success">Approved</span>';
+      } else if (data.status === 'cancelled') {
+        statusBadge = '<span class="badge badge-secondary">Cancelled</span>';
+      } else {
+        statusBadge = '<span class="badge badge-danger">Rejected</span>';
+      }
+
+      document.getElementById('detailsContent').innerHTML = `
+        <div class="modal-detail-grid">
+          <div>
+            <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--blue); padding:1.25rem; width:100%; height:100%;">
+              <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--blue); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
+                <i class="hgi hgi-stroke hgi-user"></i>Student Info
+              </h4>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Student Name</span><div class="fw-700" style="font-size:0.95rem;">${data.student_name}</div></div>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Email</span><div class="text-sm" style="word-break:break-all;">${data.student_email}</div></div>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Phone</span><div class="text-sm">${data.student_phone || 'N/A'}</div></div>
+              <div><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Requested At</span><div class="text-sm">${data.requested_at}</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--green); padding:1.25rem; width:100%; height:100%;">
+              <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--green); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
+                <i class="hgi hgi-stroke hgi-calendar-check-in-01"></i>Leave Info
+              </h4>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Leave Period</span><div class="fw-700" style="font-size:0.95rem;">${data.start_date} to ${data.end_date}</div></div>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Duration & Status</span><div class="text-sm">${data.duration} days | ${statusBadge}</div></div>
+              <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Reason</span><div class="text-sm">${data.reason}</div></div>
+              ${data.approved_by ? `
+                <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Processed By</span><div class="text-sm">${data.approved_by} (at ${data.approved_at})</div></div>
+              ` : ''}
+              ${data.remarks ? `
+                <div><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.2rem;">Remarks</span><div class="text-sm">${data.remarks}</div></div>
+              ` : ''}
+            </div>
+          </div>
+        </div>`;
+      openModal('detailsModal');
+    });
 }
 </script>
 {% endblock %}

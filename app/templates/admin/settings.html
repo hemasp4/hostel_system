@@ -6,7 +6,7 @@
 
 <!-- General Settings -->
 <div class="card mb-2">
-  <div class="card-header"><span class="card-title"><i class="hgi hgi-settings-01"></i> General Settings</span></div>
+  <div class="card-header"><span class="card-title"><i class="hgi hgi-stroke hgi-settings-01"></i> General Settings</span></div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('admin.update_settings') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -22,14 +22,14 @@
         <div class="form-group"><label class="form-label">Advance Request Days</label>
           <input type="number" name="advance_request_days" class="form-control" value="{{ settings.advance_request_days|default(1) }}"></div>
       </div>
-      <button type="submit" class="btn btn-primary"><i class="hgi hgi-floppy-disk"></i> Save General Settings</button>
+      <button type="submit" class="btn btn-primary"><i class="hgi hgi-stroke hgi-floppy-disk"></i> Save General Settings</button>
     </form>
   </div>
 </div>
 
 <!-- Notification Settings -->
 <div class="card mb-2">
-  <div class="card-header"><span class="card-title"><i class="hgi hgi-notification-01"></i> Notification Settings</span></div>
+  <div class="card-header"><span class="card-title"><i class="hgi hgi-stroke hgi-notification-01"></i> Notification Settings</span></div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('admin.update_notification_settings') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -49,14 +49,14 @@
         <input class="form-check-input" type="checkbox" name="notify_on_approval" {{ 'checked' if settings.notify_on_approval else '' }}>
         <span class="form-check-label">Notify Students on Approval/Rejection</span>
       </label>
-      <button type="submit" class="btn btn-primary mt-1"><i class="hgi hgi-floppy-disk"></i> Save Notification Settings</button>
+      <button type="submit" class="btn btn-primary mt-1"><i class="hgi hgi-stroke hgi-floppy-disk"></i> Save Notification Settings</button>
     </form>
   </div>
 </div>
 
 <!-- QR Settings -->
 <div class="card mb-2">
-  <div class="card-header"><span class="card-title"><i class="hgi hgi-qr-code"></i> QR Code Settings</span></div>
+  <div class="card-header"><span class="card-title"><i class="hgi hgi-stroke hgi-qr-code"></i> QR Code Settings</span></div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('admin.update_qr_settings') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -70,25 +70,25 @@
         <div class="form-group"><label class="form-label">QR Expiry (hours)</label>
           <input type="number" name="qr_expiry_hours" class="form-control" value="{{ settings.qr_expiry_hours|default(24) }}"></div>
       </div>
-      <button type="submit" class="btn btn-primary"><i class="hgi hgi-floppy-disk"></i> Save QR Settings</button>
+      <button type="submit" class="btn btn-primary"><i class="hgi hgi-stroke hgi-floppy-disk"></i> Save QR Settings</button>
     </form>
   </div>
 </div>
 
 <!-- Maintenance -->
 <div class="card">
-  <div class="card-header"><span class="card-title"><i class="hgi hgi-database-01"></i> Database Maintenance</span></div>
+  <div class="card-header"><span class="card-title"><i class="hgi hgi-stroke hgi-database-01"></i> Database Maintenance</span></div>
   <div class="card-body">
     <div class="form-row">
       <div>
         <p class="fw-600 mb-1">Backup Database</p>
         <p class="text-muted text-sm mb-1">Create a backup of the entire database</p>
-        <button class="btn btn-success" onclick="backupDatabase()"><i class="hgi hgi-download-01"></i> Backup Now</button>
+        <button class="btn btn-success" onclick="backupDatabase()"><i class="hgi hgi-stroke hgi-download-01"></i> Backup Now</button>
       </div>
       <div>
         <p class="fw-600 mb-1">Clean Old Records</p>
         <p class="text-muted text-sm mb-1">Remove records older than 1 year</p>
-        <button class="btn btn-warning" onclick="cleanOldRecords()"><i class="hgi hgi-delete-01"></i> Clean Records</button>
+        <button class="btn btn-warning" onclick="cleanOldRecords()"><i class="hgi hgi-stroke hgi-delete-01"></i> Clean Records</button>
       </div>
     </div>
   </div>
@@ -96,16 +96,30 @@
 
 <script>
 function backupDatabase() {
-  if (!confirm('Create database backup?')) return;
-  const f = document.createElement('form'); f.method = 'POST'; f.action = '{{ url_for("admin.backup_database") }}';
-  const c = document.createElement('input'); c.type = 'hidden'; c.name = 'csrf_token'; c.value = '{{ csrf_token() }}';
-  f.appendChild(c); document.body.appendChild(f); f.submit();
+  showConfirm(
+    'Create database backup now?',
+    () => {
+      const f = document.createElement('form'); f.method = 'POST'; f.action = '{{ url_for("admin.backup_database") }}';
+      const c = document.createElement('input'); c.type = 'hidden'; c.name = 'csrf_token'; c.value = '{{ csrf_token() }}';
+      f.appendChild(c); document.body.appendChild(f); f.submit();
+    },
+    'Backup Database',
+    'Backup',
+    'btn-success'
+  );
 }
 function cleanOldRecords() {
-  if (!confirm('Permanently delete records older than 1 year. Continue?')) return;
-  const f = document.createElement('form'); f.method = 'POST'; f.action = '{{ url_for("admin.clean_old_records") }}';
-  const c = document.createElement('input'); c.type = 'hidden'; c.name = 'csrf_token'; c.value = '{{ csrf_token() }}';
-  f.appendChild(c); document.body.appendChild(f); f.submit();
+  showConfirm(
+    'Are you sure you want to permanently delete database records older than 1 year? This action cannot be undone.',
+    () => {
+      const f = document.createElement('form'); f.method = 'POST'; f.action = '{{ url_for("admin.clean_old_records") }}';
+      const c = document.createElement('input'); c.type = 'hidden'; c.name = 'csrf_token'; c.value = '{{ csrf_token() }}';
+      f.appendChild(c); document.body.appendChild(f); f.submit();
+    },
+    'Clean Old Records',
+    'Clean Now',
+    'btn-warning'
+  );
 }
 </script>
 {% endblock %}

@@ -126,8 +126,15 @@ def reports():
     exits_data.reverse()
     entries_data.reverse()
     
-    # Recent generated reports (placeholder data)
-    recent_reports = []
+    # Recent generated reports from session
+    from flask import session
+    recent_reports = session.get('generated_reports', [])
+
+    # User roles breakdown for activity chart
+    students_count = User.query.filter_by(role='student').count()
+    wardens_count = User.query.filter_by(role='warden').count()
+    admins_count = User.query.filter_by(role='admin').count()
+    user_activity_data = [students_count, wardens_count, admins_count]
     
     return render_template('admin/reports.html',
                          chart_labels=chart_labels,
@@ -136,7 +143,8 @@ def reports():
                          attendance_labels=attendance_labels,
                          exits_data=exits_data,
                          entries_data=entries_data,
-                         recent_reports=recent_reports)
+                         recent_reports=recent_reports,
+                         user_activity_data=user_activity_data)
 
 
 @admin_bp.route('/settings')
@@ -232,13 +240,117 @@ def clean_old_records():
 @role_required('admin')
 def generate_report():
     """Generate various reports"""
+    from flask import session
     report_type = request.form.get('report_type')
     from_date = request.form.get('from_date')
     to_date = request.form.get('to_date')
     
-    # Implementation for report generation
-    flash(f'{report_type} report generated successfully', 'success')
+    # Map raw report types to human-readable names
+    type_mapping = {
+        'leave_summary': 'Leave Summary',
+        'attendance_report': 'Attendance Report',
+        'user_activity': 'User Activity Report',
+        'monthly_stats': 'Monthly Statistics'
+    }
+    human_type = type_mapping.get(report_type, report_type)
+    period = f"{from_date} to {to_date}"
+    
+    # Store metadata in session list
+    if 'generated_reports' not in session:
+        session['generated_reports'] = []
+    
+    reports_list = list(session['generated_reports'])
+    
+    new_report = {
+        'type': human_type,
+        'period': period,
+        'generated_by': current_user.name,
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'download_url': url_for('admin.download_generated_report', type=report_type, **{'from': from_date, 'to': to_date})
+    }
+    
+    # Put newest report first
+    reports_list.insert(0, new_report)
+    session['generated_reports'] = reports_list
+    session.modified = True
+    
+    flash(f'{human_type} generated successfully', 'success')
     return redirect(url_for('admin.reports'))
+
+@admin_bp.route('/reports/download')
+@login_required
+@role_required('admin')
+def download_generated_report():
+    """Dynamically generate and export actual database CSV records for download"""
+    report_type = request.args.get('type')
+    from_date_str = request.args.get('from')
+    to_date_str = request.args.get('to')
+    
+    try:
+        from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date() if from_date_str else date.today()
+        to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date() if to_date_str else date.today()
+    except Exception:
+        from_date = date.today()
+        to_date = date.today()
+        
+    import io
+    import csv
+    from flask import Response
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    filename = f"{report_type}_{from_date_str}_to_{to_date_str}.csv"
+    
+    if report_type == 'leave_summary':
+        leaves = LeaveRequest.query.filter(
+            func.date(LeaveRequest.requested_at) >= from_date,
+            func.date(LeaveRequest.requested_at) <= to_date
+        ).all()
+        
+        writer.writerow(['Leave ID', 'Student Name', 'Email', 'Start Date', 'End Date', 'Status', 'Reason', 'Requested At'])
+        for l in leaves:
+            writer.writerow([l.id, l.student.name, l.student.email, l.start_date, l.end_date, l.status, l.reason, l.requested_at])
+            
+    elif report_type == 'attendance_report':
+        records = Attendance.query.filter(
+            func.date(Attendance.timestamp) >= from_date,
+            func.date(Attendance.timestamp) <= to_date
+        ).all()
+        
+        writer.writerow(['Attendance ID', 'Student Name', 'Email', 'Scan Type', 'Timestamp'])
+        for r in records:
+            writer.writerow([r.id, r.student.name, r.student.email, r.scan_type, r.timestamp])
+            
+    elif report_type == 'user_activity':
+        users = User.query.all()
+        writer.writerow(['User ID', 'Name', 'Email', 'Phone', 'Role', 'Status', 'Joined Date'])
+        for u in users:
+            writer.writerow([u.id, u.name, u.email, u.phone, u.role, 'Active' if u.is_active else 'Inactive', u.created_at])
+            
+    else:  # monthly_stats
+        total_leaves = LeaveRequest.query.filter(
+            func.date(LeaveRequest.requested_at) >= from_date,
+            func.date(LeaveRequest.requested_at) <= to_date
+        ).count()
+        approved = LeaveRequest.query.filter(
+            LeaveRequest.status == 'approved',
+            func.date(LeaveRequest.requested_at) >= from_date,
+            func.date(LeaveRequest.requested_at) <= to_date
+        ).count()
+        attendance_scans = Attendance.query.filter(
+            func.date(Attendance.timestamp) >= from_date,
+            func.date(Attendance.timestamp) <= to_date
+        ).count()
+        
+        writer.writerow(['Statistic Metric', 'Value'])
+        writer.writerow(['Total Leave Requests', total_leaves])
+        writer.writerow(['Approved Leaves', approved])
+        writer.writerow(['Total Attendance Scans', attendance_scans])
+        
+    res = Response(output.getvalue(), mimetype='text/csv')
+    res.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return res
 
 
 @admin_bp.route('/update-settings', methods=['POST'])

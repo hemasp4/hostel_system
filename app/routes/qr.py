@@ -91,6 +91,7 @@ def scan_qr():
             'student_id': student.id,
             'student_name': student.name,
             'student_contact': f'{student.phone} / {student.email}',
+            'student_profile_image': student.profile_image,
             'leave_dates': f"{leave.start_date.strftime('%B %d, %Y')} to {leave.end_date.strftime('%B %d, %Y')}",
             'leave_days': (leave.end_date - leave.start_date).days + 1,
             'scan_type': scan_type,

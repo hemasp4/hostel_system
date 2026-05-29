@@ -20,10 +20,10 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" onclick="downloadQR()">
-                    <i class="hgi hgi-download-01"></i> Download
+                    <i class="hgi hgi-stroke hgi-download-01"></i> Download
                 </button>
                 <button type="button" class="btn btn-primary" onclick="printQR()">
-                    <i class="hgi hgi-printer"></i> Print
+                    <i class="hgi hgi-stroke hgi-printer"></i> Print
                 </button>
             </div>
         </div>
@@ -46,20 +46,10 @@ function printQR() {
     const validFrom = document.getElementById('qr-valid-from').textContent;
     const validTo = document.getElementById('qr-valid-to').textContent;
     
-    const printWindow = window.open('', '', 'height=600,width=600');
-    printWindow.document.write('<html><head><title>Leave Pass</title>');
-    printWindow.document.write('<style>body { text-align: center; font-family: Arial; }</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h2>Hostel Leave Pass</h2>');
-    printWindow.document.write('<img src="' + qrCode + '" style="max-width: 300px; margin: 20px auto;">');
-    printWindow.document.write('<p><strong>Leave ID:</strong> ' + leaveId + '</p>');
-    printWindow.document.write('<p><strong>Student:</strong> ' + studentName + '</p>');
-    printWindow.document.write('<p><strong>Valid From:</strong> ' + validFrom + '</p>');
-    printWindow.document.write('<p><strong>Valid To:</strong> ' + validTo + '</p>');
-    printWindow.document.write('<hr>');
-    printWindow.document.write('<p><small>Show this QR code at the gate for verification</small></p>');
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
+    const extraDetails = `
+        <p><strong>Valid From:</strong> ${validFrom}</p>
+        <p><strong>Valid To:</strong> ${validTo}</p>
+    `;
+    printQRHelper(qrCode, leaveId, studentName, extraDetails);
 }
 </script>

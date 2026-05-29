@@ -8,7 +8,7 @@
   <div class="card-body">
     <div class="input-group" style="max-width:400px;">
       <input type="text" class="form-control" id="studentSearch" placeholder="Search by name, email or phone…">
-      <button class="btn btn-primary"><i class="hgi hgi-search-01"></i> Search</button>
+      <button class="btn btn-primary"><i class="hgi hgi-stroke hgi-search-01"></i> Search</button>
     </div>
   </div>
 </div>
@@ -17,7 +17,7 @@
   <div class="card-header">
     <span class="card-title">All Students ({{ student_stats|length }})</span>
     <button class="btn btn-sm btn-success" onclick="exportToExcel()">
-      <i class="hgi hgi-file-export"></i>Export
+      <i class="hgi hgi-stroke hgi-file-export"></i>Export
     </button>
   </div>
   <div class="table-wrap">
@@ -43,16 +43,16 @@
           </td>
           <td><div class="action-table">
             <button class="btn btn-sm btn-outline" onclick="viewStudentDetails('{{ stat.student.id }}')">
-              <i class="hgi hgi-eye"></i><span>View</span>
+              <i class="hgi hgi-stroke hgi-eye"></i><span>View</span>
             </button>
             <a href="{{ url_for('warden.student_leaves', student_id=stat.student.id) }}" class="btn btn-sm btn-primary">
-              <i class="hgi hgi-clock-01"></i><span>Leaves</span>
+              <i class="hgi hgi-stroke hgi-clock-01"></i><span>Leaves</span>
             </a>
           </div>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="8"><div class="empty-state"><i class="hgi hgi-user-group"></i>No students found</div></td></tr>
+        <tr><td colspan="8"><div class="empty-state"><i class="hgi hgi-stroke hgi-user-group"></i>No students found</div></td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -86,7 +86,7 @@ function viewStudentDetails(id) {
           <div>
             <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--blue); padding:1.25rem; width:100%; height:100%;">
               <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--blue); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
-                <i class="hgi hgi-user"></i>Personal Info
+                <i class="hgi hgi-stroke hgi-user"></i>Personal Info
               </h4>
               <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block">Full Name</span><div class="fw-700" style="font-size:0.95rem;">${data.name}</div></div>
               <div class="mb-2"><span class="text-muted text-sm uppercase fw-600 d-block">Email</span><div class="text-sm" style="word-break:break-all;">${data.email}</div></div>
@@ -97,7 +97,7 @@ function viewStudentDetails(id) {
           <div>
             <div class="stat-card" style="border-top:none; border-bottom:3px solid var(--green); padding:1.25rem; width:100%; height:100%;">
               <h4 style="font-size:1rem; font-weight:700; margin-bottom:1rem; color:var(--green); display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">
-                <i class="hgi hgi-calendar-01"></i>Leave Stats
+                <i class="hgi hgi-stroke hgi-calendar-01"></i>Leave Stats
               </h4>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; width:100%; text-align:center;">
                 <div style="padding:0.5rem 0;"><span class="text-muted text-sm uppercase fw-600 d-block" style="margin-bottom:0.25rem;">Total</span><div class="fw-800" style="font-size:1.25rem;">${data.total_leaves}</div></div>

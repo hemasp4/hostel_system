@@ -76,18 +76,49 @@ function previewLeaveRequest() {
     }
 }
 
-// Print QR Code
-function printQR(qrCode) {
-    const printWindow = window.open('', '', 'height=400,width=400');
-    printWindow.document.write('<html><head><title>Leave QR Code</title>');
-    printWindow.document.write('</head><body style="text-align: center;">');
-    printWindow.document.write('<h3>Hostel Leave Pass</h3>');
-    printWindow.document.write('<img src="' + qrCode + '" style="max-width: 300px;">');
-    printWindow.document.write('<p>Show this QR code at the gate</p>');
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
+function printQRHelper(qrCode, leaveId, studentName, extraDetails = '') {
+    let iframe = document.getElementById('printFrame');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'printFrame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+    }
+    
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`<html><head><title>Leave Pass QR</title><style>
+        body { text-align: center; font-family: sans-serif; padding: 20px; }
+        h2 { margin-bottom: 10px; }
+        p { margin: 5px 0; }
+    </style></head><body>
+        <h2>Hostel Leave Pass</h2>
+        <img id="printImg" src="${qrCode}" style="max-width:280px; margin: 15px 0;">
+        <p><strong>Leave ID:</strong> #${leaveId || 'N/A'}</p>
+        ${studentName ? `<p><strong>Student:</strong> ${studentName}</p>` : ''}
+        ${extraDetails}
+        <p style="margin-top: 15px; color: #555;"><small>Show this QR code at the gate for verification</small></p>
+    </body></html>`);
+    doc.close();
+    
+    const img = doc.getElementById('printImg');
+    const triggerPrint = () => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    };
+    
+    if (img.complete) {
+        triggerPrint();
+    } else {
+        img.onload = triggerPrint;
+    }
 }
+
 
 // Dashboard chart initialization helper
 function initDashboardCharts(chartData) {

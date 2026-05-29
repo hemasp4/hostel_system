@@ -8,35 +8,35 @@
     <div class="text-muted text-sm">{{ student.name }} (ID: {{ student.id }})</div>
   </div>
   <a href="{{ url_for('warden.students_list') }}" class="btn btn-secondary">
-    <i class="hgi hgi-arrow-left-01"></i>Back to List
+    <i class="hgi hgi-stroke hgi-arrow-left-01"></i>Back to List
   </a>
 </div>
 
 <div class="stat-grid-2x2">
   <div>
     <div class="stat-card stat-card-blue">
-      <i class="hgi hgi-calendar-check-in stat-icon" style="color: var(--blue);"></i>
+      <i class="hgi hgi-stroke hgi-calendar-check-in-01 stat-icon" style="color: var(--blue);"></i>
       <div class="stat-label">Total Requests</div>
       <div class="stat-value blue">{{ leaves|length }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-green">
-      <i class="hgi hgi-checkmark-circle-01 stat-icon" style="color: var(--green);"></i>
+      <i class="hgi hgi-stroke hgi-checkmark-circle-01 stat-icon" style="color: var(--green);"></i>
       <div class="stat-label">Approved</div>
       <div class="stat-value green">{{ leaves|selectattr('status', 'equalto', 'approved')|list|length }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-yellow">
-      <i class="hgi hgi-time-quarter-past stat-icon" style="color: var(--yellow);"></i>
+      <i class="hgi hgi-stroke hgi-time-quarter-pass stat-icon" style="color: var(--yellow);"></i>
       <div class="stat-label">Pending</div>
       <div class="stat-value yellow">{{ leaves|selectattr('status', 'equalto', 'pending')|list|length }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-red">
-      <i class="hgi hgi-cancel-circle stat-icon" style="color: var(--red);"></i>
+      <i class="hgi hgi-stroke hgi-cancel-circle stat-icon" style="color: var(--red);"></i>
       <div class="stat-label">Rejected</div>
       <div class="stat-value red">{{ leaves|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
     </div>
@@ -44,10 +44,18 @@
 </div>
 
 <div class="card">
-  <div class="card-header flex-between">
-    <span class="card-title">Detailed Records</span>
+  <div class="card-header flex-between" style="flex-wrap: wrap; gap: 0.5rem;">
+    <div class="flex-center gap-1" style="flex-wrap: wrap;">
+      <span class="card-title">Detailed Records</span>
+      <select id="sortLeaves" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.825rem; height: 32px; border-radius: 6px; border: 1px solid var(--gray-300); background-color: var(--gray-50); cursor: pointer; color: var(--gray-700); font-weight: 500;">
+        <option value="date-desc">Date (Newest First)</option>
+        <option value="date-asc">Date (Oldest First)</option>
+        <option value="id-desc">Leave ID (High to Low)</option>
+        <option value="id-asc">Leave ID (Low to High)</option>
+      </select>
+    </div>
     <button class="btn btn-sm btn-success" onclick="exportTableToCSV('leavesTable', 'leave_history_{{ student.id }}.csv')">
-      <i class="hgi hgi-file-export"></i> Export CSV
+      <i class="hgi hgi-stroke hgi-file-export"></i> Export CSV
     </button>
   </div>
   <div class="table-wrap">
@@ -72,11 +80,11 @@
           <td style="max-width: 300px;">{{ leave.reason }}</td>
           <td>
             {% if leave.status == 'approved' %}
-              <span class="badge badge-success"><i class="hgi hgi-checkmark-01"></i> Approved</span>
+              <span class="badge badge-success"><i class="hgi hgi-stroke hgi-checkmark-circle-01"></i> Approved</span>
             {% elif leave.status == 'rejected' %}
-              <span class="badge badge-danger"><i class="hgi hgi-cancel-01"></i> Rejected</span>
+              <span class="badge badge-danger"><i class="hgi hgi-stroke hgi-cancel-01"></i> Rejected</span>
             {% else %}
-              <span class="badge badge-warning"><i class="hgi hgi-clock-01"></i> Pending</span>
+              <span class="badge badge-warning"><i class="hgi hgi-stroke hgi-clock-01"></i> Pending</span>
             {% endif %}
           </td>
           <td class="text-muted text-sm">{{ leave.requested_at.strftime('%d %b, %Y') }}</td>
@@ -88,4 +96,40 @@
     </table>
   </div>
 </div>
+
+<script>
+document.getElementById('sortLeaves').addEventListener('change', function() {
+  const table = document.getElementById('leavesTable');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  if (rows.length === 0 || rows[0].querySelector('.empty-state')) return;
+  
+  const sortVal = this.value;
+  
+  rows.sort((a, b) => {
+    const idA = parseInt(a.cells[0].textContent.replace('#', '').trim());
+    const idB = parseInt(b.cells[0].textContent.replace('#', '').trim());
+    
+    const dateTextA = a.cells[1].querySelector('.fw-600').textContent.trim();
+    const dateTextB = b.cells[1].querySelector('.fw-600').textContent.trim();
+    const dateA = new Date(dateTextA);
+    const dateB = new Date(dateTextB);
+    
+    if (sortVal === 'id-desc') {
+      return idB - idA;
+    } else if (sortVal === 'id-asc') {
+      return idA - idB;
+    } else if (sortVal === 'date-desc') {
+      return dateB - dateA;
+    } else if (sortVal === 'date-asc') {
+      return dateA - dateB;
+    }
+    return 0;
+  });
+  
+  tbody.innerHTML = '';
+  rows.forEach(row => tbody.appendChild(row));
+});
+</script>
 {% endblock %}

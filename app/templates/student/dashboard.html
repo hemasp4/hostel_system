@@ -7,21 +7,23 @@
 <!-- Active Leave Alert -->
 {% for leave in recent_leaves %}
   {% if leave.status == 'approved' and leave.qr_code and leave.is_active() %}
-  <div class="alert alert-success">
-    <i class="hgi hgi-checkmark-circle-01"></i>
-    <div style="flex: 1;">
-      <strong>Active Leave Pass</strong><br>
+  <div class="alert alert-success alert-dismissible">
+    <div class="alert-header">
+      <i class="hgi hgi-stroke hgi-checkmark-circle-01"></i>
+      <strong>Active Leave Pass</strong>
+    </div>
+    <div class="alert-body">
       <span class="text-sm">Your leave from {{ leave.start_date }} to {{ leave.end_date }} is approved!</span>
     </div>
-    <div class="action-group" style="margin-left: auto;">
+    <div class="alert-actions-group">
       <button class="btn btn-sm btn-success" onclick="showQR('{{ leave.qr_code }}', '{{ leave.id }}', '{{ leave.student.name }}')">
-        <i class="hgi hgi-qr-code"></i> Show QR
+        <i class="hgi hgi-stroke hgi-qr-code"></i> Show QR
       </button>
       <a href="{{ url_for('leave.print_leave', leave_id=leave.id) }}" class="btn btn-sm btn-outline">
-        <i class="hgi hgi-printer"></i> Print
+        <i class="hgi hgi-stroke hgi-printer"></i> Print
       </a>
     </div>
-    <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+    <button class="alert-close" onclick="this.parentElement.remove()" style="position: absolute; right: 1rem; top: 0.85rem;">×</button>
   </div>
   {% endif %}
 {% endfor %}
@@ -30,21 +32,21 @@
 <div class="stat-grid-2x2">
   <div>
     <div class="stat-card stat-card-blue">
-      <i class="hgi hgi-calendar-check-in stat-icon" style="color: var(--blue);"></i>
+      <i class="hgi hgi-stroke hgi-calendar-check-in-01 stat-icon" style="color: var(--blue);"></i>
       <div class="stat-label">Total Leaves</div>
       <div class="stat-value blue">{{ total_leaves }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-green">
-      <i class="hgi hgi-checkmark-circle-01 stat-icon" style="color: var(--green);"></i>
+      <i class="hgi hgi-stroke hgi-checkmark-circle-01 stat-icon" style="color: var(--green);"></i>
       <div class="stat-label">Approved</div>
       <div class="stat-value green">{{ approved_leaves }}</div>
     </div>
   </div>
   <div>
     <div class="stat-card stat-card-yellow">
-      <i class="hgi hgi-time-quarter-past stat-icon" style="color: var(--yellow);"></i>
+      <i class="hgi hgi-stroke hgi-time-quarter-pass stat-icon" style="color: var(--yellow);"></i>
       <div class="stat-label">Pending</div>
       <div class="stat-value yellow">{{ recent_leaves|selectattr('status','equalto','pending')|list|length }}</div>
     </div>
@@ -57,13 +59,13 @@
   <div class="card-body">
     <div class="action-group">
       <a href="{{ url_for('leave.request_leave') }}" class="btn btn-primary">
-        <i class="hgi hgi-add-square"></i> Request New Leave
+        <i class="hgi hgi-stroke hgi-add-square"></i> Request New Leave
       </a>
       <a href="{{ url_for('leave.history') }}" class="btn btn-secondary">
-        <i class="hgi hgi-clock-01"></i> View History
+        <i class="hgi hgi-stroke hgi-clock-01"></i> View History
       </a>
       <a href="{{ url_for('student.profile') }}" class="btn btn-outline">
-        <i class="hgi hgi-user-circle"></i> Update Profile
+        <i class="hgi hgi-stroke hgi-user-circle"></i> Update Profile
       </a>
     </div>
   </div>
@@ -111,7 +113,7 @@
             <div class="action-group" style="justify-content: center;">
               {% if leave.status == 'approved' and leave.qr_code %}
                 <button class="btn btn-sm btn-info" onclick="showQR('{{ leave.qr_code }}', '{{ leave.id }}', '{{ leave.student.name }}')">
-                  <i class="hgi hgi-qr-code"></i> View QR
+                  <i class="hgi hgi-stroke hgi-qr-code"></i> View QR
                 </button>
               {% else %}
                 <span class="text-muted text-sm">—</span>
@@ -138,8 +140,8 @@
       <img id="qrImage" src="" alt="QR Code" style="max-width:260px;border-radius:8px;">
       <p class="mt-1 text-muted text-sm">Show this QR at the gate — Leave #<span id="modalLeaveId"></span></p>
       <div class="flex-center gap-1 mt-1">
-        <button class="btn btn-primary" onclick="downloadQRFromModal()"><i class="hgi hgi-download-01"></i> Download</button>
-        <button class="btn btn-secondary" onclick="printQR()"><i class="hgi hgi-printer"></i> Print</button>
+        <button class="btn btn-primary" onclick="downloadQRFromModal()"><i class="hgi hgi-stroke hgi-download-01"></i> Download</button>
+        <button class="btn btn-secondary" onclick="printQR()"><i class="hgi hgi-stroke hgi-printer"></i> Print</button>
       </div>
     </div>
   </div>
@@ -164,15 +166,8 @@ function downloadQR(qrCode, leaveId) {
 }
 function downloadQRFromModal() { downloadQR(currentQRData.qrCode, currentQRData.leaveId); }
 function printQR() {
-  const w = window.open('','','height=600,width=600');
-  w.document.write(`<html><head><title>Leave Pass QR</title><style>body{text-align:center;font-family:Inter,sans-serif;padding:2rem}</style></head><body>
-    <h2>Hostel Leave Pass</h2>
-    <img src="${currentQRData.qrCode}" style="max-width:280px">
-    <p><strong>Leave ID:</strong> #${currentQRData.leaveId}</p>
-    <p>Show this QR code at the gate for verification</p>
-    <p><small>Generated: ${new Date().toLocaleString()}</small></p>
-  </body></html>`);
-  w.document.close(); w.print();
+  const extraDetails = `<p style="margin-top: 10px;"><small>Generated: ${new Date().toLocaleString()}</small></p>`;
+  printQRHelper(currentQRData.qrCode, currentQRData.leaveId, currentQRData.studentName, extraDetails);
 }
 </script>
 {% endblock %}
